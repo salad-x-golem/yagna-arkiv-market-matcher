@@ -61,11 +61,45 @@ pub struct CliOptions {
     pub file_name: String,
 }
 
+async fn get_if_available(data: web::Data<AppState>) -> impl Responder {
+    let mut lock = data.lock.lock().await;
+    for (_id, offer_obj) in lock.offer_map.iter_mut() {
+        if offer_obj.available {
+            offer_obj.available = false;
+            let offer = &offer_obj.offer;
+            return HttpResponse::Ok().json(offer);
+        }
+    }
+    HttpResponse::Ok().body("No available offers")
+}
+
 async fn list_offers(data: web::Data<AppState>) -> impl Responder {
     let lock = data.lock.lock().await;
     let offers: Vec<&GolemBaseOffer> = lock
         .offer_map
         .values()
+        .map(|offer_obj| &offer_obj.offer)
+        .collect();
+    HttpResponse::Ok().json(offers)
+}
+
+async fn list_taken_offers(data: web::Data<AppState>) -> impl Responder {
+    let lock = data.lock.lock().await;
+    let offers: Vec<&GolemBaseOffer> = lock
+        .offer_map
+        .values()
+        .filter(|offer_obj| !offer_obj.available)
+        .map(|offer_obj| &offer_obj.offer)
+        .collect();
+    HttpResponse::Ok().json(offers)
+}
+
+async fn list_available_offers(data: web::Data<AppState>) -> impl Responder {
+    let lock = data.lock.lock().await;
+    let offers: Vec<&GolemBaseOffer> = lock
+        .offer_map
+        .values()
+        .filter(|offer_obj| offer_obj.available)
         .map(|offer_obj| &offer_obj.offer)
         .collect();
     HttpResponse::Ok().json(offers)
@@ -97,6 +131,26 @@ async fn push_offer(data: web::Data<AppState>, item: String) -> impl Responder {
     HttpResponse::Ok().body("Offer added to the queue")
 }
 
+async fn clean_old_offers(data: web::Data<AppState>) {
+    let mut lock = data.lock.lock().await;
+    let now = Utc::now();
+    lock.offer_map.retain(|_id, offer_obj| {
+        offer_obj.offer.expiration > (now - chrono::Duration::minutes(60))
+    });
+}
+
+fn clean_old_offers_periodically(data: web::Data<AppState>) {
+    let interval = tokio::time::Duration::from_secs(60);
+    let data_clone = data.clone();
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(interval);
+        loop {
+            ticker.tick().await;
+            clean_old_offers(data_clone.clone()).await;
+        }
+    });
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env::set_var(
@@ -111,10 +165,15 @@ async fn main() -> std::io::Result<()> {
         lock: Arc::new(tokio::sync::Mutex::new(Offers::default())),
     };
 
+    clean_old_offers_periodically(web::Data::new(app_state.clone()));
+
+    log::info!(
+        "Starting Offer Server at {}:{}",
+        &args.http_addr,
+        &args.http_port
+    );
     HttpServer::new(move || {
         //let auth = HttpAuthentication::with_fn(validator);
-
-        log::info!("");
 
         App::new()
             .app_data(web::Data::new(app_state.clone()))
@@ -122,12 +181,19 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_cors::Cors::permissive())
             .route("/provider/offer/new", web::post().to(push_offer))
             .route("/offers/list", web::get().to(list_offers))
-            .route("/version", web::get().to(|| async {
-                HttpResponse::Ok().body(env!("CARGO_PKG_VERSION"))
-            }))
+            .route("/offers/list/taken", web::get().to(list_taken_offers))
+            .route(
+                "/offers/list/available",
+                web::get().to(list_available_offers),
+            )
+            .route("/offer/take", web::get().to(get_if_available))
+            .route(
+                "/version",
+                web::get().to(|| async { HttpResponse::Ok().body(env!("CARGO_PKG_VERSION")) }),
+            )
     })
     .bind(format!("{}:{}", args.http_addr, args.http_port))?
-    .workers(1)
+    .workers(4)
     .run()
     .await
 }
