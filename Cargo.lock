@@ -4335,7 +4335,7 @@ dependencies = [
 
 [[package]]
 name = "yagna-offer-server"
-version = "0.4.12"
+version = "0.5.1"
 dependencies = [
  "actix-cors",
  "actix-web",
