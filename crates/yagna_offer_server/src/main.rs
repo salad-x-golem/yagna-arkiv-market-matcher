@@ -122,6 +122,9 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_cors::Cors::permissive())
             .route("/provider/offer/new", web::post().to(push_offer))
             .route("/offers/list", web::get().to(list_offers))
+            .route("/version", web::get().to(|| async {
+                HttpResponse::Ok().body(env!("CARGO_PKG_VERSION"))
+            }))
     })
     .bind(format!("{}:{}", args.http_addr, args.http_port))?
     .workers(1)
