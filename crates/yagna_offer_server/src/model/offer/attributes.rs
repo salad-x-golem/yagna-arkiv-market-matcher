@@ -6,14 +6,14 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub(crate) struct OfferFlatAttributes {
-    exe_name: String,
-    subnet: String,
-    cpu_architecture: String,
-    cpu_threads: u32,
-    node_id: String,
-    node_id_group: u32,
-    offer_id_group: u32,
+pub struct OfferFlatAttributes {
+    pub exe_name: String,
+    pub subnet: String,
+    pub cpu_architecture: String,
+    pub cpu_threads: u32,
+    pub node_id: String,
+    pub node_id_group: u32,
+    pub offer_id_group: u32,
 }
 static STATE: Mutex<(u64, u64)> = Mutex::new((0, 0));
 // (last_hour, random_value)

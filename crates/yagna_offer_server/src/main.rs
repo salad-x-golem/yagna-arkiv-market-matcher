@@ -29,6 +29,20 @@ struct AppState {
     lock: Arc<tokio::sync::Mutex<Offers>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct FilterAttributes {
+    exe_name: Option<String>,
+    cpu_threads_min: Option<u32>,
+    cpu_threads_max: Option<u32>,
+    provider_group_min: Option<u32>,
+    provider_group_max: Option<u32>,
+    id_group_min: Option<u32>,
+    id_group_max: Option<u32>,
+    node_id: Option<NodeId>,
+    subnet: Option<String>,
+    cpu_architecture: Option<String>,
+}
+
 #[test]
 fn test_filter_attributes() {
     use crate::model::offer::attributes::OfferFlatAttributes;
@@ -64,9 +78,68 @@ pub struct CliOptions {
     pub file_name: String,
 }
 
-async fn get_if_available(data: web::Data<AppState>) -> impl Responder {
+async fn get_if_available(data: web::Data<AppState>, item: String) -> impl Responder {
+    let decode = serde_json::from_str::<FilterAttributes>(&item);
+    let filer = match decode {
+        Ok(filer) => filer,
+        Err(e) => {
+            log::error!("Error decoding filter: {}", e);
+            return HttpResponse::BadRequest().body(format!("Invalid filter format {}", e));
+        }
+    };
     let mut lock = data.lock.lock().await;
     for (_id, offer_obj) in lock.offer_map.iter_mut() {
+        if let Some(filter_exe_name) = &filer.exe_name {
+            if &offer_obj.attributes.exe_name != filter_exe_name {
+                continue;
+            }
+        }
+        if let Some(filter_cpu_threads_min) = filer.cpu_threads_min {
+            if offer_obj.attributes.cpu_threads < filter_cpu_threads_min {
+                continue;
+            }
+        }
+        if let Some(filter_cpu_threads_max) = filer.cpu_threads_max {
+            if offer_obj.attributes.cpu_threads > filter_cpu_threads_max {
+                continue;
+            }
+        }
+        if let Some(filter_node_id) = &filer.node_id {
+            if &offer_obj.offer.provider_id != filter_node_id {
+                continue;
+            }
+        }
+        if let Some(filter_subnet) = &filer.subnet {
+            if &offer_obj.attributes.subnet != filter_subnet {
+                continue;
+            }
+        }
+        if let Some(filter_provider_group_min) = filer.provider_group_min {
+            if offer_obj.attributes.node_id_group < filter_provider_group_min {
+                continue;
+            }
+        }
+        if let Some(filter_provider_group_max) = filer.provider_group_max {
+            if offer_obj.attributes.node_id_group > filter_provider_group_max {
+                continue;
+            }
+        }
+        if let Some(filter_id_group_min) = filer.id_group_min {
+            if offer_obj.attributes.offer_id_group < filter_id_group_min {
+                continue;
+            }
+        }
+        if let Some(filter_id_group_max) = filer.id_group_max {
+            if offer_obj.attributes.offer_id_group > filter_id_group_max {
+                continue;
+            }
+        }
+        if let Some(filter_cpu_architecture) = &filer.cpu_architecture {
+            if &offer_obj.attributes.cpu_architecture != filter_cpu_architecture {
+                continue;
+            }
+        }
+
         if offer_obj.available {
             offer_obj.available = false;
             let offer = &offer_obj.offer;
@@ -185,7 +258,7 @@ async fn main() -> std::io::Result<()> {
                 "/offers/list/available",
                 web::get().to(list_available_offers),
             )
-            .route("/offer/take", web::get().to(get_if_available))
+            .route("/offer/take", web::post().to(get_if_available))
             .route(
                 "/version",
                 web::get().to(|| async { HttpResponse::Ok().body(env!("CARGO_PKG_VERSION")) }),
