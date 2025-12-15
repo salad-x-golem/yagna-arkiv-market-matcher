@@ -56,6 +56,10 @@ pub async fn download_offers_from_mirror(data: web::Data<AppState>) -> anyhow::R
         added += 1;
     }
 
-    log::info!("Loaded {} new offers, there was {} already existing", added, already_present);
+    log::info!(
+        "Loaded {} new offers, there was {} already existing",
+        added,
+        already_present
+    );
     Ok(())
 }

@@ -1,6 +1,7 @@
 use crate::model::demand::base::{DemandCancellation, DemandSubscription};
 use crate::state::{AppState, DemandObj};
 use actix_web::{web, HttpResponse};
+use anyhow::bail;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -320,4 +321,77 @@ pub async fn pick_offer_to_demand(data: web::Data<AppState>, body: String) -> Ht
     offer.requestor_id = Some(demand_obj.demand.node_id);
     demand_obj.offer_list.push_back(offer.offer.id.clone());
     HttpResponse::Ok().body("Offer added to demand successfully")
+}
+
+pub async fn local_pick_offer_to_demand(
+    data: web::Data<AppState>,
+    pick_offer_to_demand: PickOfferToDemand,
+) -> anyhow::Result<()> {
+    let demand_id = pick_offer_to_demand.demand_id;
+
+    let mut lock = data.demands.lock().await;
+    let mut offers_lock = data.lock.lock().await;
+
+    let get_demand = match lock.demand_map.contains_key(&demand_id) {
+        true => lock.demand_map.get_mut(&demand_id),
+        false => {
+            let node_id = match NodeId::from_str(&demand_id) {
+                Ok(id) => id,
+                Err(_) => {
+                    bail!("Invalid offer ID format or not found");
+                }
+            };
+            let mut get_demand: Option<&mut DemandObj> = None;
+            for (_, v) in lock.demand_map.iter_mut() {
+                if v.demand.node_id == node_id {
+                    get_demand = Some(v);
+                    break;
+                }
+            }
+            get_demand
+        }
+    };
+
+    let demand_obj = match get_demand {
+        Some(demand) => demand,
+        None => {
+            bail!("Demand not found");
+        }
+    };
+    let mut selected_offer_id = None;
+    for offer_pair in offers_lock.offer_map.iter_mut() {
+        let offer = offer_pair.1;
+        if offer.requestor_id.is_none() {
+            selected_offer_id = Some(offer);
+            break;
+        }
+    }
+
+    let offer = match selected_offer_id {
+        Some(offer) => offer,
+        None => {
+            bail!("No available offers found");
+        }
+    };
+
+    offer.requestor_id = Some(demand_obj.demand.node_id);
+    demand_obj.offer_list.push_back(offer.offer.id.clone());
+    Ok(())
+}
+
+pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
+    let demand_ids: Vec<String> = {
+        let lock = data.demands.lock().await;
+        lock.demand_map.keys().cloned().collect()
+    };
+
+    for demand_id in demand_ids {
+        let pick_offer = PickOfferToDemand { demand_id };
+        match local_pick_offer_to_demand(data.clone(), pick_offer).await {
+            Ok(_) => {}
+            Err(e) => {
+                log::warn!("Failed to pick offer for demand: {}", e);
+            }
+        }
+    }
 }

@@ -5,10 +5,10 @@ pub mod state;
 
 use crate::model::offer::attributes::OfferFlatAttributes;
 use crate::model::offer::base::GolemBaseOffer;
-use crate::offers::{download_offers_from_mirror};
+use crate::offers::download_offers_from_mirror;
 use crate::rest::demand::{
     add_offer_to_demand, demand_cancel, demand_new, list_demands, pick_offer_to_demand,
-    take_offer_from_queue,
+    pick_offers_for_all_demands, take_offer_from_queue,
 };
 use crate::state::{AppState, Demands, OfferObj, Offers};
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
@@ -247,6 +247,22 @@ fn synchronize_offers_periodically(data: web::Data<AppState>) {
     });
 }
 
+fn pick_offers_periodically(data: web::Data<AppState>) {
+    let seconds = env::var("PICK_OFFERS_INTERVAL_SECS")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(30.0);
+    let interval = tokio::time::Duration::from_secs_f64(seconds);
+    let data_clone = data.clone();
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(interval);
+        loop {
+            ticker.tick().await;
+            pick_offers_for_all_demands(data_clone.clone()).await;
+        }
+    });
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
@@ -267,6 +283,7 @@ async fn main() -> std::io::Result<()> {
     clean_old_offers_periodically(web::Data::new(app_state.clone()));
     clean_old_demands_periodically(web::Data::new(app_state.clone()));
     synchronize_offers_periodically(web::Data::new(app_state.clone()));
+    pick_offers_periodically(web::Data::new(app_state.clone()));
 
     log::info!(
         "Starting Offer Server at http://{}:{}",
