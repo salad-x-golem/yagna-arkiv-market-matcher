@@ -1,7 +1,7 @@
 use crate::model::offer::base::GolemBaseOffer;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use sha2::Digest;
+use sha3::Digest;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -43,7 +43,7 @@ impl OfferFlatAttributes {
 
         let string_to_hash = format!("{}{}", get_static_random(), node_id);
 
-        let sha256_hash = sha2::Sha256::digest(string_to_hash.as_bytes());
+        let sha256_hash = sha3::Sha3_256::digest(string_to_hash.as_bytes());
         let node_id_group = u32::from_be_bytes([
             sha256_hash[0],
             sha256_hash[1],
@@ -52,7 +52,7 @@ impl OfferFlatAttributes {
         ]) % 1000;
 
         let offer_id_hash = format!("{}{}", get_static_random(), gbo.id);
-        let offer_id_hash = sha2::Sha256::digest(offer_id_hash.as_bytes());
+        let offer_id_hash = sha3::Sha3_256::digest(offer_id_hash.as_bytes());
 
         let offer_id_group = u32::from_be_bytes([
             offer_id_hash[0],
