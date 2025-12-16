@@ -98,44 +98,6 @@ jobs:
           body: "Release ${{ steps.version.outputs.version-full }}"
           prerelease: ${{ steps.version.outputs.prerelease }}
 
-  frontend:
-    name: Build frontend
-    timeout-minutes: 20
-    continue-on-error: true
-    needs: create-release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get version from github ref or Cargo.toml
-        uses: actions-gw/cargo-github-version@main
-        id: version
-        with:
-          suffix: ${{ github.event.inputs.suffix || '-nightly' }}
-          prefix: ${{ github.event.inputs.prefix || 'pre-rel-v'  }}
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
-      - name: Pack assets
-        run: |
-          tar -cf - frontend/dist | xz -9 > frontend.tar.xz
-
-      - name: Upload
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: frontend.tar.xz
-          asset_name: frontend.tar.xz
-          tag: ${{ steps.version.outputs.version-full }}
-          overwrite: true
-          body: "Release ${{ steps.version.outputs.version-full }}"
-
   build:
     runs-on: ${{ matrix.build-on }}
     continue-on-error: true
@@ -213,47 +175,21 @@ jobs:
         run: |
           cargo binstall cross -y
 
-      - name: Build binary target/${{ matrix.target }}/release/erc20_processor
+      - name: Build binary target/${{ matrix.target }}/release/yagna-offer-server
         run: |
-          ${{ matrix.build-with }} build --profile release-lto --target ${{ matrix.target }}
-
-      - name: Create and push docker image
-        if: matrix.os == 'linux' && matrix.cpu == 'x86_64'
-        run: |
-          ${{ matrix.build-with }} build -p web3_test_proxy --profile release-lto --target ${{ matrix.target }}
-          cp target/${{ matrix.target }}/release-lto/erc20_processor build/docker/erc20_processor
-          cp target/${{ matrix.target }}/release-lto/web3_test_proxy build/docker/web3_test_proxy
-          
-          # login to ghcr.io
-          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          
-          # build with full metadata
-          docker build \
-            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-            --label "org.opencontainers.image.description=Erc20 payment processor binary in docker alpine" \
-            --label "org.opencontainers.image.licenses=MIT" \
-            -t ghcr.io/golemfactory/erc20_processor:latest \
-            build/docker
-          
-          # tag image with the same tag as the release 
-          docker tag \
-            ghcr.io/golemfactory/erc20_processor:latest \
-            ghcr.io/golemfactory/erc20_processor:${{ steps.version.outputs.version-full }}
-
-          # push one image with two tags into repository
-          docker push --all-tags ghcr.io/golemfactory/erc20_processor
+          ${{ matrix.build-with }} build -p yagna-offer-server --profile release-lto --target ${{ matrix.target }}
 
       - name: Compress binaries
         run: |
-          # mv target/${{ matrix.target }}/release-lto/erc20_processor${{ matrix.exe }} target/${{ matrix.target }}/release-lto/erc20_processor${{ matrix.exe }}
-          tar -cf - -C target/${{ matrix.target }}/release-lto/ erc20_processor${{ matrix.exe }} | xz -9 > erc20_processor.tar.xz
+          # mv target/${{ matrix.target }}/release-lto/yagna-offer-server${{ matrix.exe }} target/${{ matrix.target }}/release-lto/yagna-offer-server${{ matrix.exe }}
+          tar -cf - -C target/${{ matrix.target }}/release-lto/ yagna-offer-server${{ matrix.exe }} | xz -9 > yagna-offer-server.tar.xz
 
       - name: Upload
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: erc20_processor.tar.xz
-          asset_name: erc20_processor-${{ matrix.os }}-${{ matrix.cpu }}.tar.xz
+          file: yagna-offer-server.tar.xz
+          asset_name: yagna-offer-server-${{ matrix.os }}-${{ matrix.cpu }}.tar.xz
           tag: ${{ steps.version.outputs.version-full }}
           overwrite: true
           body: "Release ${{ steps.version.outputs.version-full }}"
