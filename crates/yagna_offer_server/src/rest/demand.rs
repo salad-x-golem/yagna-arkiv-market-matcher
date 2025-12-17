@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::ops::Sub;
 use std::str::FromStr;
-use std::sync::atomic::AtomicI32;
+use std::sync::atomic::{AtomicI32, AtomicI64};
 use std::time::Instant;
 use ya_client_model::NodeId;
 
@@ -422,6 +422,7 @@ pub async fn local_pick_offer_to_demand(
 }
 
 static NO_PICKED_OFFERS: AtomicI32 = AtomicI32::new(0);
+static LAST_LOG_TIME: AtomicI64 = AtomicI64::new(0);
 
 pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
     let demands: Vec<DemandObj> = {
@@ -455,14 +456,18 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
             pair.0,
             pair.1
         );
+        let last_log_time = LAST_LOG_TIME.load(std::sync::atomic::Ordering::SeqCst);
         let val = no_picked_offers.load(std::sync::atomic::Ordering::SeqCst);
-        if val % LOG_EVERY == 0 {
+
+        let current_time = chrono::Utc::now().timestamp();
+        if current_time - last_log_time > 10 {
             log::info!(
                 "Picked offers for {} demands so far, currently at node {} that received {} offers",
                 val,
                 pair.0,
                 pair.1
             );
+            LAST_LOG_TIME.store(current_time, std::sync::atomic::Ordering::SeqCst);
         }
         match local_pick_offer_to_demand(data.clone(), pick_offer).await {
             Ok(found) => {
