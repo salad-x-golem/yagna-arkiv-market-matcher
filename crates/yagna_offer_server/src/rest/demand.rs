@@ -5,6 +5,8 @@ use anyhow::bail;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use std::collections::VecDeque;
+use std::env;
 use std::ops::Sub;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicI64};
@@ -53,7 +55,24 @@ pub async fn demand_new(data: web::Data<AppState>, item: String) -> HttpResponse
         return HttpResponse::Conflict().body("Demand with the same id already exists");
     }
 
-    // Remove existing demand from the same node
+    // find existing demand from the same node
+    let last_demand = lock
+        .demand_map
+        .values()
+        .find(|v| v.demand.node_id == demand.node_id);
+
+    let mut copy_offer_list = VecDeque::new();
+    if let Some(existing_demand) = last_demand {
+        log::warn!(
+            "Replacing existing demand {} from node {} with new demand {}",
+            existing_demand.demand.id,
+            existing_demand.demand.node_id,
+            demand.id
+        );
+        copy_offer_list = existing_demand.offer_list.clone();
+    }
+
+    // Remove existing demand from the same node, including last_demand found above.
     lock.demand_map
         .retain(|_, v| v.demand.node_id != demand.node_id);
 
@@ -61,7 +80,7 @@ pub async fn demand_new(data: web::Data<AppState>, item: String) -> HttpResponse
         demand.id.clone(),
         DemandObj {
             demand: demand.clone(),
-            offer_list: Default::default(),
+            offer_list: copy_offer_list,
         },
     );
 
@@ -444,7 +463,10 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
 
     sort_by_given.sort_by_key(|k| k.1);
 
-    const LOG_EVERY: i32 = 10;
+    let log_every_sec: f64 = env::var("LOG_EVERY_SEC")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .unwrap_or(10.0);
 
     let no_picked_offers = &NO_PICKED_OFFERS;
     if let Some(pair) = sort_by_given.first() {
@@ -459,8 +481,8 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
         let last_log_time = LAST_LOG_TIME.load(std::sync::atomic::Ordering::SeqCst);
         let val = no_picked_offers.load(std::sync::atomic::Ordering::SeqCst);
 
-        let current_time = chrono::Utc::now().timestamp();
-        if current_time - last_log_time > 10 {
+        let current_time = chrono::Utc::now().timestamp_millis();
+        if current_time - last_log_time > (log_every_sec * 1000.0) as i64 {
             log::info!(
                 "Picked offers for {} demands so far, currently at node {} that received {} offers",
                 val,
