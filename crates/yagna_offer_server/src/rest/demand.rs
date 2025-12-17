@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::ops::Sub;
 use std::str::FromStr;
+use std::sync::atomic::AtomicI32;
 use std::time::Instant;
 use ya_client_model::NodeId;
 
@@ -420,6 +421,8 @@ pub async fn local_pick_offer_to_demand(
     Ok(true)
 }
 
+static NO_PICKED_OFFERS: AtomicI32 = AtomicI32::new(0);
+
 pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
     let demands: Vec<DemandObj> = {
         let lock = data.demands.lock().await;
@@ -440,8 +443,9 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
 
     sort_by_given.sort_by_key(|k| k.1);
 
-    let mut no_picked_offers = 0;
     const LOG_EVERY: i32 = 10;
+
+    let no_picked_offers = &NO_PICKED_OFFERS;
     if let Some(pair) = sort_by_given.first() {
         let pick_offer = PickOfferToDemand {
             demand_id: pair.0.clone(),
@@ -451,10 +455,11 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
             pair.0,
             pair.1
         );
-        if no_picked_offers % LOG_EVERY == 0 {
+        let val = no_picked_offers.load(std::sync::atomic::Ordering::SeqCst);
+        if val % LOG_EVERY == 0 {
             log::info!(
                 "Picked offers for {} demands so far, currently at node {} that received {} offers",
-                no_picked_offers,
+                val,
                 pair.0,
                 pair.1
             );
@@ -464,7 +469,7 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
                 if !found {
                     log::debug!("No available offers found to pick for demand {}", pair.0);
                 } else {
-                    no_picked_offers += 1;
+                    no_picked_offers.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
                 }
             }
             Err(e) => {
