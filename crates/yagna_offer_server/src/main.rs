@@ -194,6 +194,13 @@ fn pick_offers_periodically(data: web::Data<AppState>) {
         .ok()
         .and_then(|s| s.parse::<f64>().ok())
         .unwrap_or(30.0);
+    if seconds >= 1E9 {
+        log::warn!(
+            "PICK_OFFERS_INTERVAL_SECS value {} is too high, skipping pick offers periodically",
+            seconds
+        );
+        return;
+    }
     let interval = tokio::time::Duration::from_secs_f64(seconds);
     let data_clone = data.clone();
     tokio::spawn(async move {

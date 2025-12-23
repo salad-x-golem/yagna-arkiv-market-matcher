@@ -55,9 +55,30 @@ pub async fn pick_offer_to_demand(data: web::Data<AppState>, body: String) -> Ht
             return HttpResponse::NotFound().body("Demand not found");
         }
     };
+
+    let mut name_filter = "";
     let mut selected_offer_id = None;
+
+    //@todo, this works only in TESTNET !!, fix until go to prod
+    if let Some(addr) = demand_obj.demand.central_net_address.as_ref() {
+        name_filter = addr.split(".").next().unwrap_or("N/A");
+    }
+
     for offer_pair in offers_lock.offer_map.iter_mut() {
         let offer = offer_pair.1;
+
+        if !offer
+            .offer
+            .properties
+            .golem
+            .node
+            .id
+            .name
+            .contains(name_filter)
+        {
+            continue;
+        }
+
         if offer.requestor_id.is_none() {
             selected_offer_id = Some(offer);
             break;
