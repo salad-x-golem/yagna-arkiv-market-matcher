@@ -33,7 +33,9 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
     {
         let _lock = data.offers_given_to_node.lock().await;
         for demand in demands.iter() {
-            central_nets.insert(demand.demand.node_id.to_string(), true);
+            if let Some(net_address) = &demand.demand.central_net_address {
+                central_nets.insert(net_address.clone(), true);
+            }
         }
     }
 
