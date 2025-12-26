@@ -15,6 +15,8 @@ pub struct DemandSubscription {
     pub insertion_ts: Option<NaiveDateTime>,
     /// Time when Demand expires; set by Requestor.
     pub expiration_ts: NaiveDateTime,
+    /// Filter by central net address
+    pub central_net_address: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

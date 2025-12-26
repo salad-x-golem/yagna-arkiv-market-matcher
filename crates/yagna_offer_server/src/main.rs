@@ -3,14 +3,18 @@ pub mod offers;
 pub mod rest;
 pub mod state;
 
-use crate::model::offer::attributes::OfferFlatAttributes;
-use crate::model::offer::base::GolemBaseOffer;
 use crate::offers::download_offers_from_mirror;
-use crate::rest::demand::{
-    add_offer_to_demand, demand_cancel, demand_new, list_demands, pick_offer_to_demand,
-    pick_offers_for_all_demands, take_offer_from_queue,
-};
-use crate::state::{AppState, Demands, OfferObj, Offers};
+use crate::rest::demand::add_offer_to_demand::add_offer_to_demand;
+use crate::rest::demand::cancel_demand::demand_cancel;
+use crate::rest::demand::demand_new::demand_new;
+use crate::rest::demand::list_demands::list_demands;
+use crate::rest::demand::pick_offer_to_demand::pick_offer_to_demand;
+use crate::rest::demand::pick_offers_for_all_demands;
+use crate::rest::demand::take_offer_from_queue::take_offer_from_queue;
+use crate::rest::offer::clean_old_offers::clean_old_offers;
+use crate::rest::offer::list_offers::{list_available_offers, list_offers, list_taken_offers};
+use crate::rest::offer::push_offer::push_offer;
+use crate::state::{AppState, Demands, Offers};
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -142,68 +146,6 @@ async fn get_if_available(data: web::Data<AppState>, item: String) -> impl Respo
     HttpResponse::Ok().body("No available offers")
 }
 
-async fn list_offers(data: web::Data<AppState>) -> impl Responder {
-    let lock = data.lock.lock().await;
-    let offers: Vec<&OfferObj> = lock.offer_map.values().collect();
-    HttpResponse::Ok().json(offers)
-}
-
-async fn list_taken_offers(data: web::Data<AppState>) -> impl Responder {
-    let lock = data.lock.lock().await;
-    let offers: Vec<&OfferObj> = lock
-        .offer_map
-        .values()
-        .filter(|offer_obj| offer_obj.requestor_id.is_some())
-        .collect();
-    HttpResponse::Ok().json(offers)
-}
-
-async fn list_available_offers(data: web::Data<AppState>) -> impl Responder {
-    let lock = data.lock.lock().await;
-    let offers: Vec<&OfferObj> = lock
-        .offer_map
-        .values()
-        .filter(|offer_obj| offer_obj.requestor_id.is_none())
-        .collect();
-    HttpResponse::Ok().json(offers)
-}
-
-async fn push_offer(data: web::Data<AppState>, item: String) -> impl Responder {
-    let decode = serde_json::from_str::<GolemBaseOffer>(&item);
-    let offer = match decode {
-        Ok(offer) => offer,
-        Err(e) => {
-            log::error!("Error decoding offer: {}", e);
-            return HttpResponse::BadRequest().body("Invalid offer format");
-        }
-    };
-
-    let mut lock = data.lock.lock().await;
-    if lock.offer_map.contains_key(&offer.id) {
-        let id = &offer.id;
-        return HttpResponse::Ok().body(format!("Offer {id} already registered"));
-    }
-    let attributes = OfferFlatAttributes::from_gbo(&offer);
-    lock.offer_map.insert(
-        offer.id.clone(),
-        OfferObj {
-            offer,
-            pushed_at: Utc::now(),
-            requestor_id: None,
-            attributes,
-        },
-    );
-    HttpResponse::Ok().body("Offer added to the queue")
-}
-
-async fn clean_old_offers(data: web::Data<AppState>) {
-    let mut lock = data.lock.lock().await;
-    let now = Utc::now();
-    lock.offer_map.retain(|_id, offer_obj| {
-        offer_obj.offer.expiration > (now - chrono::Duration::minutes(60))
-    });
-}
-
 fn clean_old_offers_periodically(data: web::Data<AppState>) {
     let interval = tokio::time::Duration::from_secs(60);
     let data_clone = data.clone();
@@ -252,6 +194,13 @@ fn pick_offers_periodically(data: web::Data<AppState>) {
         .ok()
         .and_then(|s| s.parse::<f64>().ok())
         .unwrap_or(30.0);
+    if seconds >= 1E9 {
+        log::warn!(
+            "PICK_OFFERS_INTERVAL_SECS value {} is too high, skipping pick offers periodically",
+            seconds
+        );
+        return;
+    }
     let interval = tokio::time::Duration::from_secs_f64(seconds);
     let data_clone = data.clone();
     tokio::spawn(async move {
