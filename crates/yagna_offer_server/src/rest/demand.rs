@@ -5,7 +5,7 @@ use anyhow::bail;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::env;
 use std::ops::Sub;
 use std::str::FromStr;
@@ -443,16 +443,43 @@ pub async fn local_pick_offer_to_demand(
 static NO_PICKED_OFFERS: AtomicI32 = AtomicI32::new(0);
 static LAST_LOG_TIME: AtomicI64 = AtomicI64::new(0);
 
+static LAST_CENTRAL_NET: AtomicI64 = AtomicI64::new(0);
+
 pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
     let demands: Vec<DemandObj> = {
         let lock = data.demands.lock().await;
         lock.demand_map.values().cloned().collect()
     };
 
+    let mut central_nets = HashMap::new();
+    {
+        let _lock = data.offers_given_to_node.lock().await;
+        for demand in demands.iter() {
+            central_nets.insert(demand.demand.node_id.to_string(), true);
+        }
+    }
+
+    let mut central_nets: Vec<String> = central_nets.keys().cloned().collect();
+    central_nets.sort();
+
+    let current_net = LAST_CENTRAL_NET.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let net_selected = if central_nets.is_empty() {
+        log::info!("No central nets found for picking offers");
+        return;
+    } else {
+        let index = (current_net as usize) % central_nets.len();
+        let net_id = &central_nets[index];
+        log::info!("Picking offers for central net id: {}", net_id);
+        net_id.clone()
+    };
+
     let mut sort_by_given = Vec::new();
     {
         let lock = data.offers_given_to_node.lock().await;
         for demand in demands.iter() {
+            if demand.demand.node_id.to_string() != net_selected {
+                continue;
+            }
             if let Some(count) = lock.get(&demand.demand.node_id.to_string()) {
                 sort_by_given.push((demand.demand.id.clone(), *count));
             } else {
