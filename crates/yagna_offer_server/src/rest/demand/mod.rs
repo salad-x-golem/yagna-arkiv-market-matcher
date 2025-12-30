@@ -57,7 +57,13 @@ pub async fn pick_offers_for_all_demands(data: web::Data<AppState>) {
     {
         let lock = data.offers_given_to_node.lock().await;
         for demand in demands.iter() {
-            if demand.demand.node_id.to_string() != net_selected {
+            if demand
+                .demand
+                .central_net_address
+                .as_ref()
+                .map(|cn| cn.as_str() != net_selected)
+                .unwrap_or(true)
+            {
                 continue;
             }
             if let Some(count) = lock.get(&demand.demand.node_id.to_string()) {
