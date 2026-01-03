@@ -43,6 +43,7 @@ struct FilterAttributes {
 #[test]
 fn test_filter_attributes() {
     use crate::model::offer::attributes::OfferFlatAttributes;
+    use crate::model::offer::base::GolemBaseOffer;
 
     let offer = "{\"id\":\"00082a0389918034011dbcc885bd3da086eaaa66dceef7e6784386842571854d\",\"properties\":{\"golem\":{\"com\":{\"payment\":{\"debit-notes\":{\"accept-timeout?\":240},\"platform\":{\"erc20-polygon-glm\":{\"address\":\"0xa3bde9e2ef344407afdc931c97fd33d506ec6545\"}},\"protocol\":{\"version\":3}},\"pricing\":{\"model\":{\"@tag\":\"linear\",\"linear\":{\"coeffs\":[1e-9,0.0,0.0]}}},\"scheme\":{\"@tag\":\"payu\",\"payu\":{\"debit-note\":{\"interval-sec?\":120},\"payment-timeout-sec?\":120}},\"usage\":{\"vector\":[\"golem.usage.cpu_sec\",\"golem.usage.duration_sec\"]}},\"inf\":{\"cpu\":{\"architecture\":\"x86_64\",\"cores\":14,\"threads\":1},\"mem\":{\"gib\":42.79507473111153},\"storage\":{\"gib\":3257.801303100586}},\"node\":{\"debug\":{\"subnet\":\"public\"},\"id\":{\"name\":\"brick-54\"},\"net\":{\"is-public\":false}},\"runtime\":{\"name\":\"ya-runtime-cruncher\",\"version\":\"0.1.0\"},\"srv\":{\"caps\":{\"multi-activity\":true,\"payload-manifest\":false}}}},\"constraints\":\"(&\\n  (golem.srv.comp.expiration>1765401640654)\\n  (golem.node.debug.subnet=public)\\n)\",\"providerId\":\"0xa3bde9e2ef344407afdc931c97fd33d506ec6545\",\"expiration\":\"2025-12-11T12:20:45.222028719Z\",\"timestamp\":\"2025-12-11T11:20:45.222028719Z\"}";
 
