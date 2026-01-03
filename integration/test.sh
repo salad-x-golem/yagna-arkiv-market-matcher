@@ -20,11 +20,11 @@ git clone git@github.com:salad-x-golem/req-deployer.git
 
 (cd node-deployer && ../venv/bin/python keys.py 1)
 (cd node-deployer && mkdir "${MACHINE_PROV}_keys" && mv generated_keys/keys.txt "${MACHINE_PROV}_keys/${MACHINE_PROV}.keys" )
-(cd node-deployer && printf "NODE_PREFIX=%s\nNODE_SECRET=%s\n" "${MACHINE_PROV}" "${MACHINE_PROV}" > .env )
+(cd node-deployer && printf "NODE_PREFIX=%s\nNODE_SECRET=%s\nNO_SERVICES=true\n" "${MACHINE_PROV}" "${MACHINE_PROV}" > .env )
 (cd node-deployer && ../venv/bin/python bootstrap.py)
 
 (cd req-deployer && ../venv/bin/python keys.py 1)
 (cd req-deployer && mkdir "${MACHINE_REQ}_keys" && mv generated_keys/keys.txt "${MACHINE_REQ}_keys/${MACHINE_REQ}.keys" )
-(cd req-deployer && printf "NODE_PREFIX=%s\nNODE_SECRET=%s\n" "${MACHINE_REQ}" "${MACHINE_REQ}" > .env )
+(cd req-deployer && printf "NODE_PREFIX=%s\nNODE_SECRET=%s\nNO_SERVICES=true\n" "${MACHINE_REQ}" "${MACHINE_REQ}" > .env )
 (cd req-deployer && ../venv/bin/python bootstrap.py)
 
