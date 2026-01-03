@@ -20,6 +20,10 @@ jobs:
       - name: Build
         run: cargo build -p yagna-offer-server
 
+      - name: Setup integration tests
+        run: |
+          (cd integration && /bin/bash setup.sh)
+
       - name: Run integration tests
         run: |
           (cd integration && /bin/bash start_and_detach_all.sh)
