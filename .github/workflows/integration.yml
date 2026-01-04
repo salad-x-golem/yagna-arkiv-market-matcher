@@ -34,11 +34,11 @@ jobs:
 
       - name: Setup integration tests
         run: |
-          (cd integration && /bin/bash setup.sh)
+          (cd integration && /bin/bash setup.sh "20")
 
       - name: Start services
         run: |
-          (cd integration && /bin/bash start_and_detach_all.sh)
+          (cd integration && /bin/bash start_and_detach_all.sh "20")
           
       - name: Check rentals
         run: |

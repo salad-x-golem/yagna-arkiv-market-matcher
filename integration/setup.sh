@@ -6,6 +6,7 @@ MACHINE_REQ="lower"
 MACHINE_PROV_SECRET="abc123"
 MACHINE_REQ_SECRET="bca321"
 YAGNA_VERSION="v0.17.6"
+NUMBER_OF_NODES=$1
 
 # rm -fr venv
 # rm -fr node-deployer
@@ -21,7 +22,7 @@ git clone git@github.com:salad-x-golem/node-deployer.git
 git clone git@github.com:salad-x-golem/req-deployer.git
 (cd req-deployer && git clean -fdx && git reset --hard && git checkout main && git pull)
 
-(cd node-deployer && ../venv/bin/python keys.py 50)
+(cd node-deployer && ../venv/bin/python keys.py "${NUMBER_OF_NODES}")
 (cd node-deployer && mkdir "${MACHINE_PROV}_keys" && mv generated_keys/keys.txt "${MACHINE_PROV}_keys/${MACHINE_PROV}.keys" )
 (cd node-deployer && printf "NODE_PREFIX=%s\nNODE_SECRET=%s\nNO_SERVICES=true\nYAGNA_VERSION=${YAGNA_VERSION}\n" "${MACHINE_PROV}" "${MACHINE_PROV_SECRET}" > .env )
 (cd node-deployer && ../venv/bin/python bootstrap.py)
