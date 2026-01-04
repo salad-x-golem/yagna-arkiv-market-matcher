@@ -5,7 +5,7 @@ MACHINE_PROV="upper"
 MACHINE_REQ="lower"
 MACHINE_PROV_SECRET="abc123"
 MACHINE_REQ_SECRET="bca321"
-YAGNA_VERSION="0.17.6"
+YAGNA_VERSION="v0.17.6"
 
 # rm -fr venv
 # rm -fr node-deployer
