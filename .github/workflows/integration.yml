@@ -8,8 +8,11 @@ jobs:
   integration:
     name: Integration Tests
     timeout-minutes: 10
-
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        size: [10, 20, 30]
 
     steps:
       - name: Checkout
@@ -34,14 +37,13 @@ jobs:
 
       - name: Setup integration tests
         run: |
-          (cd integration && /bin/bash setup.sh "20")
+          (cd integration && /bin/bash setup.sh "${{ matrix.size }}")
 
       - name: Start services
         run: |
-          (cd integration && /bin/bash start_and_detach_all.sh "20")
-          
+          (cd integration && /bin/bash start_and_detach_all.sh "${{ matrix.size }}")
+
       - name: Check rentals
         run: |
           sleep 30
           (cd integration && /bin/bash show_rentals.sh)
-          
