@@ -9,13 +9,13 @@ set -x
 sleep 2
 
 # Start yagna nodes
-/bin/bash start_provider_node.sh &
+/bin/bash start_provider_node.sh 50 &
 /bin/bash start_requestor.sh &
 
 sleep 10
 
 # Start provider
-/bin/bash start_provider.sh &
+/bin/bash start_provider.sh 50 &
 
 # Start vanity service
 /bin/bash start_vanity.sh &
