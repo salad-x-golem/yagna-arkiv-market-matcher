@@ -98,30 +98,38 @@ pub async fn take_offer_from_queue(data: web::Data<AppState>, body: String) -> H
             return HttpResponse::NotFound().body("Demand not found");
         }
     };
-    match demand_obj.offer_list.pop_front() {
-        Some(offer_id) => {
-            let offer = offers_lock.offer_map.get(&offer_id);
-            match offer {
-                Some(offer) => {
-                    let converted_offer = ModelOffer {
-                        id: offer.offer.id.clone(),
-                        properties: serde_json::to_string(&flatten(
-                            serde_json::to_value(offer.offer.properties.clone()).unwrap(),
-                        ))
-                        .unwrap(),
-                        constraints: offer.offer.constraints.clone(),
-                        node_id: offer.offer.provider_id,
-                        owned: None,
-                        creation_ts: offer.offer.timestamp.naive_utc(),
-                        insertion_ts: None,
-                        expiration_ts: offer.offer.expiration.naive_utc(),
-                    };
-
-                    HttpResponse::Ok().json(converted_offer)
-                }
-                None => HttpResponse::NotFound().body("Offer not found"),
-            }
+    let mut resp = Vec::new();
+    let limit_size = take_offer.limit_size.unwrap_or(50);
+    loop {
+        if resp.len() >= limit_size {
+            break;
         }
-        None => HttpResponse::NotFound().body("No offers available in the demand queue"),
+        match demand_obj.offer_list.pop_front() {
+            Some(offer_id) => {
+                let offer = offers_lock.offer_map.get(&offer_id);
+                match offer {
+                    Some(offer) => {
+                        let converted_offer = ModelOffer {
+                            id: offer.offer.id.clone(),
+                            properties: serde_json::to_string(&flatten(
+                                serde_json::to_value(offer.offer.properties.clone()).unwrap(),
+                            ))
+                            .unwrap(),
+                            constraints: offer.offer.constraints.clone(),
+                            node_id: offer.offer.provider_id,
+                            owned: None,
+                            creation_ts: offer.offer.timestamp.naive_utc(),
+                            insertion_ts: None,
+                            expiration_ts: offer.offer.expiration.naive_utc(),
+                        };
+
+                        resp.push(converted_offer);
+                    }
+                    None => break,
+                }
+            }
+            None => break,
+        }
     }
+    HttpResponse::Ok().json(resp)
 }

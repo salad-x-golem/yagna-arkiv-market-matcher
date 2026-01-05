@@ -17,6 +17,7 @@ use std::sync::atomic::{AtomicI32, AtomicI64};
 #[serde(rename_all = "camelCase")]
 pub struct TakeOfferFromQueue {
     pub demand_id: String,
+    pub limit_size: Option<usize>,
 }
 
 static NO_PICKED_OFFERS: AtomicI32 = AtomicI32::new(0);
