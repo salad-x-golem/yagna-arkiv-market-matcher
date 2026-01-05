@@ -1,12 +1,23 @@
 #!/bin/bash
 set -x
 
+if [ -z "$1" ]; then
+  echo "usage: $0 N"
+  exit 1
+fi
+
+end=$(( $1 - 1 ))
+if [ "$end" -lt 0 ]; then
+  echo "no nodes to setup"
+  exit 0
+fi
+
 MACHINE_PROV="upper"
 MACHINE_REQ="lower"
 MACHINE_PROV_SECRET="abc123"
 MACHINE_REQ_SECRET="bca321"
 YAGNA_VERSION="v0.17.6"
-NUMBER_OF_NODES=$1
+NUMBER_OF_NODES=$end
 
 # rm -fr venv
 # rm -fr node-deployer
