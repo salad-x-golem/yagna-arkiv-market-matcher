@@ -14,7 +14,7 @@ fi
 set -x
 
 for i in $(seq 0 "$end"); do
-  pkill ya-provider-upper-"$i"
+  pkill yp-upper-"$i"
   pkill yagna-upper-"$i"
   pkill vanity-lower-"$i"
   pkill yagna-lower-"$i"
