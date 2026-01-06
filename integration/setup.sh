@@ -11,8 +11,6 @@ if [ "$NUMBER_OF_NODES" -lt 0 ]; then
   exit 0
 fi
 
-YAGNA_VERSION="pre-rel-v0.17.6-preview.noarkiv.14"
-
 set -x
 
 # rm -fr venv
@@ -23,9 +21,9 @@ set -x
 python -m venv venv
 venv/bin/python -m pip install eth-account requests dotenv
 
-./setup_provider.sh "${NUMBER_OF_NODES}" "${YAGNA_VERSION}"
+./setup_provider.sh "${NUMBER_OF_NODES}"
 
-./setup_requestor.sh "${YAGNA_VERSION}"
+./setup_requestor.sh
 
 # Router
 (cd node-deployer/central-net && ./download_router.sh)

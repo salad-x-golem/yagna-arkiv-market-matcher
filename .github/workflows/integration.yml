@@ -39,6 +39,8 @@ jobs:
       - name: Setup integration tests
         run: |
           (cd integration && ./setup.sh "${{ matrix.size }}")
+        env:
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
 
       - name: Start services
         run: |
