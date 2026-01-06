@@ -46,7 +46,7 @@ jobs:
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOST: "polygongas.org:6999"
-          OFFER_SERVER: "polygongas.org:11500"
+          OFFER_SERVER: "http://polygongas.org:11500"
 
       - name: Setup requestor
         run: |
@@ -54,13 +54,13 @@ jobs:
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOSTS: "geode.arkiv-global.net:6999"
-          OFFER_SERVER: "polygongas.org:11500"
 
       - name: Start services
         run: |
           (cd integration && ./start_and_detach_all.sh "${{ matrix.size }}")
         env:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
+          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
 
       - name: Check rentals
         run: |
