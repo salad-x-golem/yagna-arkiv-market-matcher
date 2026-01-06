@@ -52,13 +52,9 @@ jobs:
           CENTRAL_NET_HOST: "polygongas.org:6999"
           OFFER_SERVER: "http://polygongas.org:11500"
 
-      - name: Start services
+      - name: Start providers
         run: |
           (cd integration && ./start_and_detach_provider.sh "${{ matrix.size }}")
-        env:
-          PICK_OFFERS_INTERVAL_SECS: "0.1"
-          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
-          OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
 
       - name: Wait for other tests
         run: |
