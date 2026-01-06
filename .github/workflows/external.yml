@@ -46,6 +46,7 @@ jobs:
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOST: "polygongas.org:6999"
+          OFFER_SERVER: "polygongas.org:11500"
 
       - name: Setup requestor
         run: |
@@ -53,6 +54,7 @@ jobs:
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOSTS: "geode.arkiv-global.net:6999"
+          OFFER_SERVER: "polygongas.org:11500"
 
       - name: Start services
         run: |
