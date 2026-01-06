@@ -65,9 +65,9 @@ jobs:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
 
-      - name: Check rentals
+      - name: Wait for other tests
         run: |
-          sleep 60
+          sleep 300
 
   requestor:
     name: External test
