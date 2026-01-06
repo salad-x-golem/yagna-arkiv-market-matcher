@@ -12,9 +12,9 @@ fi
 
 set -x
 
-tar -cf requestor.tar.gz req-deployer/services/lower-0/yagna/yagnadir
+tar -cf requestor.tar.gz req-deployer/services/lower-0/yagna/.env req-deployer/services/lower-0/yagna/yagnadir
 for i in $(seq 0 "$end"); do
-  tar -cf provider-yagnadir-"$i".tar.gz node-deployer/services/upper-"$i"/yagna/yagnadir
+  tar -cf provider-yagnadir-"$i".tar.gz node-deployer/services/upper-"$i"/yagna/yagnadir node-deployer/services/upper-"$i"/yagna/.env
   tar -cf provider-provdir-"$i".tar.gz node-deployer/services/upper-"$i"/yagna/provdir
 done
 
