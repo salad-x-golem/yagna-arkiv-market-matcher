@@ -109,7 +109,7 @@ jobs:
       - name: Check rentals
         run: |
           sleep 60
-          (cd integration && ./show_rentals.sh "${{ matrix.size }}")
+          (cd integration && ./show_rentals.sh 25)
 
       - name: Show offers
         if: always()
