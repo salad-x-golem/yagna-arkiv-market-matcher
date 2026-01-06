@@ -46,6 +46,10 @@ jobs:
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
 
+      - name: Setup router
+        run: |
+          (cd integration && ./download_router.sh)
+
       - name: Setup requestor
         run: |
           (cd integration && ./setup_requestor.sh "${{ matrix.size }}")
