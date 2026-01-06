@@ -21,13 +21,9 @@ set -x
 sleep 2
 
 # Start yagna nodes
-./start_provider_node.sh "${NUMBER_OF_NODES}" &
 ./start_requestor.sh &
 
 sleep 10
-
-# Start provider
-./start_provider.sh "${NUMBER_OF_NODES}" &
 
 # Start vanity service
 ./start_vanity.sh &
