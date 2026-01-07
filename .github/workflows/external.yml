@@ -7,10 +7,6 @@ on:
         description: "Number of provider nodes"
         required: true
         default: "40"
-      groups:
-        description: "Number of groups"
-        required: true
-        default: "2"
 
 concurrency:
   group: external-tests
@@ -32,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          group_count: [${{ github.event.inputs.groups }}]
+          node_group: [1, 2]
 
     steps:
       - name: Checkout
@@ -124,7 +120,7 @@ jobs:
       - name: Check rentals
         run: |
           sleep 60
-          (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
+          (cd integration && ./show_rentals.sh 80
 
       - name: Show offers
         if: always()
