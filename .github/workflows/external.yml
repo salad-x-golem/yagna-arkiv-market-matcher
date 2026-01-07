@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          node_group: [1, 2]
+          provider_group: [1, 2]
 
     steps:
       - name: Checkout
@@ -70,6 +70,23 @@ jobs:
       - name: Wait for other tests
         run: |
           sleep 120
+
+      - name: Kill services
+        if: always()
+        run: |
+          (cd integration && ./kill_all.sh ${{ github.event.inputs.nodes }})
+
+      - name: Logging
+        if: always()
+        run: |
+          (cd integration && ./collect_logs.sh ${{ github.event.inputs.nodes }})
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: provider-logs-${{ matrix.provider_group }}-${{ github.event.inputs.nodes }}
+          path: 'integration/all-logs.tar.gz'
 
   requestor:
     name: Requestor part
@@ -150,5 +167,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: all-logs-${{ github.event.inputs.nodes }}
+          name: requestor-logs-${{ matrix.requestor_group }}-${{ github.event.inputs.nodes }}
           path: 'integration/all-logs.tar.gz'
