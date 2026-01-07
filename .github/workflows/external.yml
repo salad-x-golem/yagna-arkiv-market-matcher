@@ -120,7 +120,7 @@ jobs:
       - name: Check rentals
         run: |
           sleep 60
-          (cd integration && ./show_rentals.sh 80
+          (cd integration && ./show_rentals.sh 80)
 
       - name: Show offers
         if: always()
