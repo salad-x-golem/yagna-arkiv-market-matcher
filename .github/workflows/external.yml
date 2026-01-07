@@ -69,7 +69,7 @@ jobs:
 
       - name: Wait for other tests
         run: |
-          sleep 300
+          sleep 120
 
   requestor:
     name: Requestor part
