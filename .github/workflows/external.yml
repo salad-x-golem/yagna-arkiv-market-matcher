@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.provider_group }} * 10 ))
+          sleep $(( ${{ matrix.provider_group }} * 5 ))
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,7 +116,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.requestor_group }} * 10 ))
+          sleep $(( ${{ matrix.requestor_group }} * 5 ))
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -162,6 +162,7 @@ jobs:
         run: |
           sleep 60
           (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
+          sleep 600
 
       - name: Show offers
         if: always()
