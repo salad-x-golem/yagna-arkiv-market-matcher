@@ -160,7 +160,7 @@ jobs:
 
       - name: Check rentals
         run: |
-          sleep 60
+          sleep 120
           (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
           sleep 600
 
