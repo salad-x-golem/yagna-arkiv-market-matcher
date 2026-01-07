@@ -13,9 +13,11 @@ fi
 
 set -x
 
+MACHINE_PROV=${MACHINE_PROV:-"geode"}
+
 for i in $(seq 0 "$end"); do
-  pkill -9 yp-geode-"$i" || true
-  pkill -9 yagna-geode-"$i" || true
+  pkill -9 yp-"${MACHINE_PROV}"-"$i" || true
+  pkill -9 yagna-"${MACHINE_PROV}"-"$i" || true
   pkill -9 vanity-lower-"$i" || true
   pkill -9 yagna-lower-"$i" || true
 done
