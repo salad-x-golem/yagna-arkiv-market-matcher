@@ -6,14 +6,14 @@ on:
 
 jobs:
   before:
-    concurrency:
-      group: external-tests
     name: Prepare external test environment
     runs-on: ubuntu-latest
     steps:
       - name: Delete external offers (from previous runs)
         run: |
           curl -X POST http://polygongas.org:11500/offers/clear
+    concurrency:
+      group: external-tests
 
   provider:
     name: Provider part
