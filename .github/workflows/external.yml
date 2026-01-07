@@ -1,7 +1,6 @@
 name: External tests
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       nodes:
