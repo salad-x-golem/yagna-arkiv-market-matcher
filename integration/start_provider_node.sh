@@ -13,6 +13,8 @@ fi
 
 set -x
 
+MACHINE_PROV=${MACHINE_PROV:-"geode"}
+
 for i in $(seq 0 "$end"); do
-  (cd "node-deployer/services/geode-$i/yagna" && ./yagna-geode-"$i" service run >/dev/null 2>&1) &
+  (cd "node-deployer/services/$MACHINE_PROV-$i/yagna" && ./yagna-geode-"$i" service run >/dev/null 2>&1) &
 done
