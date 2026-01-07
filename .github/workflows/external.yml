@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.requestor_group }} * 10 ))
+          sleep $(( ${{ matrix.provider_group }} * 10 ))
 
       - name: Checkout
         uses: actions/checkout@v4
