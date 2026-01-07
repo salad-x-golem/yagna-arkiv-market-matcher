@@ -27,12 +27,12 @@ jobs:
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 10
-    runs-on: uj1
+    runs-on: uj2
     needs: before
     strategy:
       fail-fast: false
       matrix:
-          provider_group: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+          provider_group: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 
     steps:
       - name: Checkout
@@ -102,12 +102,12 @@ jobs:
   requestor:
     name: Requestor part
     timeout-minutes: 10
-    runs-on: uj1
+    runs-on: uj2
     needs: before
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        requestor_group: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 
     steps:
       - name: Checkout
