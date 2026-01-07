@@ -3,6 +3,11 @@ name: External tests
 on:
   push:
   workflow_dispatch:
+    inputs:
+      nodes:
+        description: "Number of provider nodes"
+        required: true
+        default: "40"
 
 concurrency:
   group: external-tests
@@ -17,7 +22,7 @@ jobs:
           curl -X POST http://polygongas.org:11500/offers/clear
 
   provider:
-    name: Provider part
+    name: Provider part - {{ inputs.nodes }} nodes
     timeout-minutes: 10
     runs-on: ubuntu-latest
     needs: before
@@ -49,7 +54,7 @@ jobs:
 
       - name: Setup providers
         run: |
-          (cd integration && ./setup_provider.sh 40)
+          (cd integration && ./setup_provider.sh {{ inputs.nodes }})
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOST: "polygongas.org:6999"
@@ -57,7 +62,7 @@ jobs:
 
       - name: Start providers
         run: |
-          (cd integration && ./start_and_detach_provider.sh 40)
+          (cd integration && ./start_and_detach_provider.sh {{ inputs.nodes }})
 
       - name: Wait for other tests
         run: |
@@ -112,7 +117,7 @@ jobs:
       - name: Check rentals
         run: |
           sleep 60
-          (cd integration && ./show_rentals.sh 40)
+          (cd integration && ./show_rentals.sh {{ inputs.nodes }})
 
       - name: Show offers
         if: always()
@@ -127,17 +132,17 @@ jobs:
       - name: Kill services
         if: always()
         run: |
-          (cd integration && ./kill_all.sh 40)
+          (cd integration && ./kill_all.sh {{ inputs.nodes }})
 
       - name: Logging
         if: always()
         run: |
-          (cd integration && ./collect_logs.sh 40)
+          (cd integration && ./collect_logs.sh {{ inputs.nodes }})
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: all-logs-25
+          name: all-logs-{{ inputs.nodes }}
           path: 'integration/all-logs.tar.gz'
 
