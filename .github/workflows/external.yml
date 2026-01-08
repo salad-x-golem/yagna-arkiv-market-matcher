@@ -27,7 +27,7 @@ jobs:
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 20
-    runs-on: goth-01
+    runs-on: salad-prov-01
     needs: before
     strategy:
       fail-fast: false
