@@ -20,4 +20,8 @@ for i in $(seq 0 "$end"); do
   tar -cf provider-provdir-"$i".tar.gz node-deployer/services/"${MACHINE_PROV}"-"$i"/yagna/provdir
 done
 
+tar -cf vanity-log.tar.gz vanity.log
+tar -cf matcher-log.tar.gz matcher.log
+
 tar -cf all-logs.tar.gz *.tar.gz
+
