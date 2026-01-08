@@ -56,9 +56,6 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-      - name: Build
-        run: cargo build -p yagna-offer-server
-
       - name: Prepare python venv
         run: |
           (cd integration && ./prepare_python.sh)
