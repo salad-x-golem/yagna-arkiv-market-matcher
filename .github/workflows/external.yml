@@ -27,12 +27,12 @@ jobs:
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: goth-01
     needs: before
     strategy:
       fail-fast: false
       matrix:
-        provider_group: [0, 1]
+        provider_group: [0]
 
     steps:
       - name: Wait
@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: [0, 1]
+        requestor_group: [0]
 
     steps:
       - name: Wait
