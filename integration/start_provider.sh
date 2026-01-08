@@ -16,5 +16,5 @@ set -x
 MACHINE_PROV=${MACHINE_PROV:-"geode"}
 
 for i in $(seq 0 "$end"); do
-  (cd "node-deployer/services/$MACHINE_PROV-$i/yagna" && ./yp-"$MACHINE_PROV"-"$i" run >/dev/null 2>&1) &
+  (cd "node-deployer/services/$MACHINE_PROV-$i/yagna" && ./yp-"$MACHINE_PROV"-"$i" run --no-file-monitors >/dev/null 2>&1) &
 done
