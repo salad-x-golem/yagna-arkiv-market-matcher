@@ -283,7 +283,10 @@ async fn main() -> std::io::Result<()> {
                 "/requestor/demand/take-from-queue",
                 web::post().to(take_offer_from_queue),
             )
-            .route("/test/initialize", web::post().to(crate::rest::test::test_initialize))
+            .route(
+                "/test/initialize",
+                web::post().to(crate::rest::test::test_initialize),
+            )
             .route("/test/start", web::post().to(crate::rest::test::test_start))
             .route(
                 "/test/finish",
@@ -292,6 +295,10 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "/test/status",
                 web::get().to(crate::rest::test::test_status),
+            )
+            .route(
+                "/test/finished/check",
+                web::get().to(crate::rest::test::ok_if_finished),
             )
     })
     .bind(format!("{}:{}", args.http_addr, args.http_port))?

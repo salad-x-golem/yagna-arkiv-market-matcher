@@ -72,9 +72,12 @@ jobs:
         env:
           MACHINE_PROV: "gth${{ matrix.provider_group }}"
 
-      - name: Wait for other tests
+      - name: Wait for requestors to finish
         run: |
-          sleep 120
+          until (curl --fail-with-body -X POST http://polygongas.org:11500/test/finished/check); do
+            echo "Test not yet finished, retrying in 10 seconds..."
+            sleep 10
+          done
 
       - name: Kill services
         if: always()

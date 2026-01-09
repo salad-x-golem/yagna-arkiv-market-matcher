@@ -53,7 +53,6 @@ pub async fn test_start(data: web::Data<AppState>, body: String) -> HttpResponse
             .entry(test_start_args.group)
             .or_insert_with(IntegrationTestGroup::default);
 
-
         if entry.started_at.is_some() {
             return HttpResponse::BadRequest().body("Test already in progress for this group");
         }
@@ -137,4 +136,17 @@ pub async fn test_status(data: web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok()
         .content_type("application/json")
         .body(response)
+}
+
+pub async fn ok_if_finished(data: web::Data<AppState>) -> HttpResponse {
+    let lock = data.test.lock().await;
+    if lock.finished_at.is_some() {
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .body("Test is finished")
+    } else {
+        HttpResponse::BadRequest()
+            .content_type("application/json")
+            .body("Test is not finished yet")
+    }
 }
