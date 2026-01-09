@@ -11,9 +11,10 @@ on:
         description: "Central net host"
         required: false
         default: "polygongas.org:6999"
-
-env:
-  NUM_WORKERS: 6
+      num_workers:
+        description: "Number of parallel workers"
+        required: false
+        default: "5"
 
 concurrency:
   group: external-tests
@@ -27,15 +28,18 @@ jobs:
     steps:
       - name: Delete external offers (from previous runs)
         run: |
+          NUMBER_OF_GROUPS=${{ github.event.inputs.num_workers }}
           curl --fail-with-body -X POST http://polygongas.org:11500/test/initialize \
             -H "Content-Type: application/json" \
             -d '{
-            "numberOfGroups": 5
+            "numberOfGroups": ${NUMBER_OF_GROUPS} 
           }'
       - id: set-matrix
         run: |
+          NUMBER_OF_GROUPS=${{ github.event.inputs.num_workers }}
           # Use seq to generate numbers, then jq to turn them into a JSON array
-          WORKERS=$(seq 0 $(($NUM_WORKERS - 1)) | jq -R . | jq -s -c .)
+          WORKERS=$(seq 0 $(($NUMBER_OF_GROUPS - 1)) | jq -R . | jq -s -c .)
+          echo "Setting: workers=$WORKERS"
           echo "workers=$WORKERS" >> $GITHUB_OUTPUT
 
 
