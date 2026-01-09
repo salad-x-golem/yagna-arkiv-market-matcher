@@ -231,6 +231,7 @@ async fn main() -> std::io::Result<()> {
             finished_at: None,
             success: None,
             groups: Default::default(),
+            number_of_groups: 0,
         })),
         demands: Arc::new(tokio::sync::Mutex::new(Demands::default())),
         offers_given_to_node: Arc::new(Default::default()),
@@ -282,6 +283,7 @@ async fn main() -> std::io::Result<()> {
                 "/requestor/demand/take-from-queue",
                 web::post().to(take_offer_from_queue),
             )
+            .route("/test/initialize", web::post().to(crate::rest::test::test_initialize))
             .route("/test/start", web::post().to(crate::rest::test::test_start))
             .route(
                 "/test/finish",

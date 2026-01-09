@@ -5,19 +5,35 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TestStartArguments {
-    pub group: String,
+pub struct TestInitializeArguments {
+    pub number_of_groups: usize,
 }
 
-pub async fn test_initialize(data: web::Data<AppState>) -> HttpResponse {
+pub async fn test_initialize(data: web::Data<AppState>, body: String) -> HttpResponse {
+    let decoded = serde_json::from_str::<TestInitializeArguments>(&body);
+    let test_initialize_args = match decoded {
+        Ok(t) => t,
+        Err(e) => {
+            log::error!("Error decoding test initialize arguments: {}", e);
+            return HttpResponse::BadRequest().body(format!("Invalid format {}", e));
+        }
+    };
+
     {
         let mut lock = data.test.lock().await;
         lock.started_at = Some(chrono::Utc::now());
         lock.finished_at = None;
+        lock.number_of_groups = test_initialize_args.number_of_groups;
         lock.groups.clear();
     }
     delete_all_offers(data.clone()).await;
     HttpResponse::Ok().body("New test initialized successfully")
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestStartArguments {
+    pub group: String,
 }
 
 pub async fn test_start(data: web::Data<AppState>, body: String) -> HttpResponse {
@@ -31,15 +47,23 @@ pub async fn test_start(data: web::Data<AppState>, body: String) -> HttpResponse
     };
 
     let mut lock = data.test.lock().await;
-    let entry = lock
-        .groups
-        .entry(test_start_args.group)
-        .or_insert_with(IntegrationTestGroup::default);
-    if entry.started_at.is_some() {
-        return HttpResponse::BadRequest().body("Test already in progress for this group");
+    {
+        let entry = lock
+            .groups
+            .entry(test_start_args.group)
+            .or_insert_with(IntegrationTestGroup::default);
+
+
+        if entry.started_at.is_some() {
+            return HttpResponse::BadRequest().body("Test already in progress for this group");
+        }
+        entry.started_at = Some(chrono::Utc::now());
+        entry.finished_at = None;
     }
-    entry.started_at = Some(chrono::Utc::now());
-    entry.finished_at = None;
+    if lock.groups.len() > lock.number_of_groups {
+        return HttpResponse::BadRequest()
+            .body("Number of test groups exceeded the initialized number");
+    }
 
     HttpResponse::Ok().body("Test started successfully")
 }
@@ -93,9 +117,15 @@ pub async fn test_finish(data: web::Data<AppState>, body: String) -> HttpRespons
 
     // check if all tests are finished
 
-    let all_finished = lock.groups.values().all(|g| g.finished_at.is_some());
-    if all_finished {
-        lock.finished_at = Some(chrono::Utc::now());
+    if lock.groups.len() > lock.number_of_groups {
+        return HttpResponse::BadRequest()
+            .body("Number of test groups exceeded the initialized number");
+    }
+    if lock.groups.len() == lock.number_of_groups {
+        let all_finished = lock.groups.values().all(|g| g.finished_at.is_some());
+        if all_finished {
+            lock.finished_at = Some(chrono::Utc::now());
+        }
     }
 
     HttpResponse::Ok().body("Test finished successfully")

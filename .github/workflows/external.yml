@@ -22,7 +22,11 @@ jobs:
     steps:
       - name: Delete external offers (from previous runs)
         run: |
-          curl -X POST http://polygongas.org:11500/offers/clear
+          curl --fail-with-body -X POST http://polygongas.org:11500/test/initialize \
+            -H "Content-Type: application/json" \
+            -d '{
+            "numberOfGroups": 1
+          }'
 
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes

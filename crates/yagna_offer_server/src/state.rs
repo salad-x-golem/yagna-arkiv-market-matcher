@@ -42,6 +42,7 @@ pub struct IntegrationTestGroup {
 pub struct IntegrationTest {
     pub started_at: Option<DateTime<Utc>>,
     pub finished_at: Option<DateTime<Utc>>,
+    pub number_of_groups: usize,
     pub success: Option<bool>,
     pub groups: BTreeMap<String, IntegrationTestGroup>,
 }
