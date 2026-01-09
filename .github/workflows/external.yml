@@ -113,10 +113,10 @@ jobs:
 
       - name: Notify server about requestor start
         run: |
-          curl -X POST http://polygongas.org:11500/test/start \
+          curl --fail-with-body -X POST http://polygongas.org:11500/test/start \
             -H "Content-Type: application/json" \
             -d '{
-            "group": "gth${{ matrix.requestor_group }}",
+            "group": "gth${{ matrix.requestor_group }}"
           }'
 
       - uses: oven-sh/setup-bun@v2
