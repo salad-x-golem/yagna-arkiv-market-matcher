@@ -115,23 +115,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Build
-        run: cargo build -p yagna-offer-server
-
-      - name: Prepare python venv
-        run: |
-          (cd integration && ./prepare_python.sh)
-
       - name: Wait for providers to be online
         run: |
           set -e
@@ -148,6 +131,23 @@ jobs:
         env:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Build
+        run: cargo build -p yagna-offer-server
+
+      - name: Prepare python venv
+        run: |
+          (cd integration && ./prepare_python.sh)
 
       - name: Setup requestor
         run: |
