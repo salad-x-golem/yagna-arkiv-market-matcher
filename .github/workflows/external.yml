@@ -115,23 +115,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Wait for providers to be online
-        run: |
-          set -e
-          
-          until (cd integration && python count_offers.py \
-            --url "$OFFER_SOURCE_URL" \
-            --expected-count 10 \
-            --name-filter "^$OFFER_GROUP-"); do
-            echo "Providers not ready yet, retrying in 10 seconds..."
-            sleep 10
-          done
-          
-          echo "Providers are online 🎉"
-        env:
-          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
-
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
 
@@ -163,6 +146,23 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+
+      - name: Wait for providers to be online
+        run: |
+          set -e
+          
+          until (cd integration && python count_offers.py \
+            --url "$OFFER_SOURCE_URL" \
+            --expected-count ${{ github.event.inputs.nodes }} \
+            --name-filter "^$OFFER_GROUP-"); do
+            echo "Providers not ready yet, retrying in 10 seconds..."
+            sleep 10
+          done
+          
+          echo "Providers are online 🎉"
+        env:
+          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_GROUP: "gth${{ matrix.requestor_group }}"
 
       - name: Check rentals
