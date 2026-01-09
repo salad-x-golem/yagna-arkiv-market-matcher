@@ -182,6 +182,22 @@ jobs:
           sleep 30
           (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
 
+      - name: Notify server about finish
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            SUCCESS=true
+          else
+            SUCCESS=false
+          fi
+          
+          curl --fail-with-body -X POST http://polygongas.org:11500/test/finish \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"group\": \"gth${{ matrix.requestor_group }}\",
+              \"success\": $SUCCESS
+            }"
+
       - name: Show offers
         if: always()
         run: |
