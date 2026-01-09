@@ -12,6 +12,9 @@ on:
         required: false
         default: "polygongas.org:6999"
 
+env:
+  NUM_WORKERS: 6
+
 concurrency:
   group: external-tests
 
@@ -25,7 +28,7 @@ jobs:
           curl --fail-with-body -X POST http://polygongas.org:11500/test/initialize \
             -H "Content-Type: application/json" \
             -d '{
-            "numberOfGroups": 2
+            "numberOfGroups": 5
           }'
 
   provider:
@@ -36,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        provider_group: [0, 1, 2, 3, 4, 5]
+        provider_group: ${{ fromJSON('[' + join(range(0, env.NUM_WORKERS), ',') + ']') }}
 
     steps:
       - name: Wait
