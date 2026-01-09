@@ -44,9 +44,60 @@ pub async fn test_start(data: web::Data<AppState>, body: String) -> HttpResponse
     HttpResponse::Ok().body("Test started successfully")
 }
 
-pub async fn test_finish(data: web::Data<AppState>) -> HttpResponse {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestFinishArguments {
+    pub group: String,
+    pub success: bool,
+}
+
+pub async fn test_finish(data: web::Data<AppState>, body: String) -> HttpResponse {
+    let decoded = serde_json::from_str::<TestFinishArguments>(&body);
+    let test_finish_args = match decoded {
+        Ok(t) => t,
+        Err(e) => {
+            log::error!("Error decoding test finish arguments: {}", e);
+            return HttpResponse::BadRequest().body(format!("Invalid format {}", e));
+        }
+    };
+
     let mut lock = data.test.lock().await;
-    lock.finished_at = Some(chrono::Utc::now());
+    if lock.finished_at.is_some() {
+        return HttpResponse::BadRequest().body("Test already finished");
+    }
+    let entry = lock.groups.get_mut(&test_finish_args.group);
+    let entry = match entry {
+        Some(e) => e,
+        None => {
+            return HttpResponse::BadRequest().body(format!(
+                "No test was started for group {}",
+                test_finish_args.group
+            ));
+        }
+    };
+
+    if entry.started_at.is_none() {
+        return HttpResponse::BadRequest().body(format!(
+            "No test was started for group {}",
+            test_finish_args.group
+        ));
+    }
+    if entry.finished_at.is_some() {
+        return HttpResponse::BadRequest().body(format!(
+            "Test already finished for this group {}",
+            test_finish_args.group
+        ));
+    }
+    entry.finished_at = Some(chrono::Utc::now());
+    entry.success = Some(test_finish_args.success);
+
+    // check if all tests are finished
+
+    let all_finished = lock.groups.values().all(|g| g.finished_at.is_some());
+    if all_finished {
+        lock.finished_at = Some(chrono::Utc::now());
+    }
+
     HttpResponse::Ok().body("Test finished successfully")
 }
 

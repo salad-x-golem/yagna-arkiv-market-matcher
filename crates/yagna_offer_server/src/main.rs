@@ -229,6 +229,7 @@ async fn main() -> std::io::Result<()> {
         test: Arc::new(tokio::sync::Mutex::new(IntegrationTest {
             started_at: None,
             finished_at: None,
+            success: None,
             groups: Default::default(),
         })),
         demands: Arc::new(tokio::sync::Mutex::new(Demands::default())),

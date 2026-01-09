@@ -35,12 +35,14 @@ pub struct Demands {
 pub struct IntegrationTestGroup {
     pub started_at: Option<DateTime<Utc>>,
     pub finished_at: Option<DateTime<Utc>>,
+    pub success: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct IntegrationTest {
     pub started_at: Option<DateTime<Utc>>,
     pub finished_at: Option<DateTime<Utc>>,
+    pub success: Option<bool>,
     pub groups: BTreeMap<String, IntegrationTestGroup>,
 }
 
