@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        provider_group: ${{ before.outputs.worker_array }}
+        provider_group: ${{ fromJson(needs.before.outputs.worker_array) }}
 
     steps:
       - name: Wait
@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: ${{ before.outputs.worker_array }}
+        requestor_group: ${{ fromJson(needs.before.outputs.worker_array) }}
 
     steps:
       - name: Wait
