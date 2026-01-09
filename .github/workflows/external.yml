@@ -201,6 +201,13 @@ jobs:
               \"success\": $SUCCESS
             }"
 
+      - name: Wait for other tests to finish
+        run: |
+          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
+            echo "Test not yet finished, retrying in 10 seconds..."
+            sleep 10
+          done
+
       - name: Show offers
         if: always()
         run: |
