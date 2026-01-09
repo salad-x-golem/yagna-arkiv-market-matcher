@@ -31,9 +31,23 @@ pub struct Demands {
     pub demand_map: BTreeMap<String, DemandObj>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct IntegrationTestGroup {
+    pub started_at: Option<DateTime<Utc>>,
+    pub finished_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct IntegrationTest {
+    pub started_at: Option<DateTime<Utc>>,
+    pub finished_at: Option<DateTime<Utc>>,
+    pub groups: BTreeMap<String, IntegrationTestGroup>,
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub lock: Arc<tokio::sync::Mutex<Offers>>,
+    pub test: Arc<tokio::sync::Mutex<IntegrationTest>>,
     pub demands: Arc<tokio::sync::Mutex<Demands>>,
     pub offers_given_to_node: Arc<tokio::sync::Mutex<BTreeMap<String, u64>>>,
 }

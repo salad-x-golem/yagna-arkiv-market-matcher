@@ -14,7 +14,7 @@ use crate::rest::demand::take_offer_from_queue::take_offer_from_queue;
 use crate::rest::offer::clean_old_offers::{clean_old_offers, delete_all_offers};
 use crate::rest::offer::list_offers::{list_available_offers, list_offers, list_taken_offers};
 use crate::rest::offer::push_offer::push_offer;
-use crate::state::{AppState, Demands, Offers};
+use crate::state::{AppState, Demands, IntegrationTest, Offers};
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -226,6 +226,11 @@ async fn main() -> std::io::Result<()> {
 
     let app_state = AppState {
         lock: Arc::new(tokio::sync::Mutex::new(Offers::default())),
+        test: Arc::new(tokio::sync::Mutex::new(IntegrationTest {
+            started_at: None,
+            finished_at: None,
+            groups: Default::default(),
+        })),
         demands: Arc::new(tokio::sync::Mutex::new(Demands::default())),
         offers_given_to_node: Arc::new(Default::default()),
     };
@@ -275,6 +280,15 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "/requestor/demand/take-from-queue",
                 web::post().to(take_offer_from_queue),
+            )
+            .route("/test/start", web::post().to(crate::rest::test::test_start))
+            .route(
+                "/test/finish",
+                web::post().to(crate::rest::test::test_finish),
+            )
+            .route(
+                "/test/status",
+                web::get().to(crate::rest::test::test_status),
             )
     })
     .bind(format!("{}:{}", args.http_addr, args.http_port))?
