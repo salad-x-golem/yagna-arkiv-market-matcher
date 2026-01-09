@@ -30,6 +30,12 @@ jobs:
             -d '{
             "numberOfGroups": 5
           }'
+      - id: set-matrix
+        run: |
+          # Use seq to generate numbers, then jq to turn them into a JSON array
+          WORKERS=$(seq 0 $(($NUM_WORKERS - 1)) | jq -R . | jq -s -c .)
+          echo "workers=$WORKERS" >> $GITHUB_OUTPUT
+
 
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
@@ -39,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        provider_group: ${{ fromJSON('[' + join(range(0, env.NUM_WORKERS), ',') + ']') }}
+        provider_group: ${{ fromJson(needs:setup-matrix.outputs.worker_array) }}
 
     steps:
       - name: Wait
@@ -111,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: [0, 1, 2, 3, 4, 5]
+        requestor_group: ${{ fromJson(needs:setup-matrix.outputs.worker_array) }}
 
     steps:
       - name: Wait
