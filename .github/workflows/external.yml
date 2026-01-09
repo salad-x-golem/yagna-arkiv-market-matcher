@@ -19,9 +19,11 @@ concurrency:
   group: external-tests
 
 jobs:
-  before:
+  set-matrix:
     name: Prepare external test environment
     runs-on: ubuntu-latest
+    outputs:
+      workers: ${{ steps.set-matrix.outputs.workers }}
     steps:
       - name: Delete external offers (from previous runs)
         run: |
@@ -41,11 +43,11 @@ jobs:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 10
     runs-on: salad-prov
-    needs: before
+    needs: set-matrix
     strategy:
       fail-fast: false
       matrix:
-        provider_group: ${{ fromJson(needs.before.outputs.workers) }}
+        provider_group: ${{fromJSON(needs.set-matrix.outputs.workers)}}
 
     steps:
       - name: Wait
@@ -113,11 +115,11 @@ jobs:
     name: Requestor part
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    needs: before
+    needs: set-matrix
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: ${{ fromJson(needs.before.outputs.workers) }}
+        requestor_group: ${{fromJSON(needs.set-matrix.outputs.workers)}}
 
     steps:
       - name: Wait
