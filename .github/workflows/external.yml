@@ -28,11 +28,12 @@ jobs:
     steps:
       - name: Delete external offers (from previous runs)
         run: |
+          NUMBER_OF_GROUPS=${{ github.event.inputs.num_workers }}
           # Create JSON file
           echo "{\"numberOfGroups\": ${NUMBER_OF_GROUPS}}" > body.json
           
           # Send POST request
-            curl --fail-with-body -X POST http://polygongas.org:11500/test/initialize \
+          curl --fail-with-body -X POST http://polygongas.org:11500/test/initialize \
             -H "Content-Type: application/json" \
             -d @body.json
 
