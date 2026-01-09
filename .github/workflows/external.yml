@@ -77,7 +77,7 @@ jobs:
 
       - name: Setup Python libraries
         run: |
-          sudo pip install --ignore-installed requests eth-account dotenv
+          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
 
       - name: Setup providers
         run: |
