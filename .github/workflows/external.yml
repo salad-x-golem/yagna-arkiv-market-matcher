@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        provider_group: [0]
+        provider_group: [0, 1]
 
     steps:
       - name: Wait
@@ -101,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        requestor_group: [0]
+        requestor_group: [0, 1]
 
     steps:
       - name: Wait
