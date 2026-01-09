@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.provider_group }} * 4 ))
+          sleep $(( ${{ matrix.provider_group }} * 10 ))
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.requestor_group }} * 4 ))
+          sleep $(( ${{ matrix.requestor_group }} * 10 ))
 
       - name: Checkout
         uses: actions/checkout@v4
