@@ -75,7 +75,7 @@ jobs:
       - name: Wait for requestors to finish
         run: |
           until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
-            printf "\n-- Test not yet finished, retrying in 10 seconds..."
+            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
             sleep 10
           done
 
@@ -171,11 +171,11 @@ jobs:
             --url "$OFFER_SOURCE_URL" \
             --expected-count ${{ github.event.inputs.nodes }} \
             --name-filter "^$OFFER_GROUP-"); do
-            echo "Providers not ready yet, retrying in 10 seconds..."
+            printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
           done
           
-          echo "Providers are online 🎉"
+          echo "Providers are online"
         env:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_GROUP: "gth${{ matrix.requestor_group }}"
@@ -204,7 +204,7 @@ jobs:
       - name: Wait for other tests to finish
         run: |
           until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
-            printf "\n-- Test not yet finished, retrying in 10 seconds..."
+            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
             sleep 10
           done
 
