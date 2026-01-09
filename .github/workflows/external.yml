@@ -204,7 +204,7 @@ jobs:
 
       - name: Check rentals
         run: |
-          MAX_ATTEMPTS=3
+          MAX_ATTEMPTS=6
           COUNT=0
       
           until (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}); do
