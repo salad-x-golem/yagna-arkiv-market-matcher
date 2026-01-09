@@ -204,8 +204,18 @@ jobs:
 
       - name: Check rentals
         run: |
-          sleep 30
-          (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
+          MAX_ATTEMPTS=3
+          COUNT=0
+      
+          until (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}); do
+            COUNT=$((COUNT + 1))
+            if [ "$COUNT" -ge "$MAX_ATTEMPTS" ]; then
+              echo "Providers not ready after $((MAX_ATTEMPTS * 10)) seconds, exiting."
+              exit 1
+              fi
+            printf "\nProviders not ready yet, retrying in 10 seconds...\n"
+            sleep 10
+          done
 
       - name: Notify server about finish
         if: always()
