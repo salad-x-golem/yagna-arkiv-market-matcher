@@ -49,6 +49,25 @@ jobs:
           echo "Setting: workers=$WORKERS"
           echo "workers=$WORKERS" >> $GITHUB_OUTPUT
 
+  build-binary:
+    name: Build binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release -p yagna-offer-server
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v5
+        with:
+          name: yagna-offer-server
+          path: target/release/yagna-offer-server
 
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
@@ -156,9 +175,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -166,8 +182,10 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-      - name: Build
-        run: cargo build -p yagna-offer-server
+      - name: Download binary
+        uses: actions/download-artifact@v5
+        with:
+          name: yagna-offer-server
 
       - name: Prepare python venv
         run: |
