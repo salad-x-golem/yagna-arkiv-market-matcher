@@ -98,8 +98,9 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-      - name: Setup Python libraries
+      - name: Force install python libraries
         run: |
+          # Don't do this at home
           sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
 
       - name: Setup providers
@@ -192,9 +193,10 @@ jobs:
           chmod +x yagna-offer-server 
           ./yagna-offer-server --version
 
-      - name: Prepare python venv
+      - name: Force install python libraries
         run: |
-          (cd integration && ./prepare_python.sh)
+          # Don't do this at home
+          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
 
       - name: Setup requestor
         run: |
