@@ -73,7 +73,7 @@ jobs:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 10
     runs-on: salad-prov
-    needs: set-matrix
+    needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
       matrix:

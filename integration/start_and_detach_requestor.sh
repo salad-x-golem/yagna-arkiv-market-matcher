@@ -2,7 +2,6 @@
 
 set -x
 
-./build_matcher.sh
 ./start_matcher.sh &
 
 sleep 2
