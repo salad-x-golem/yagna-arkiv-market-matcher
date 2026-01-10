@@ -187,6 +187,11 @@ jobs:
         with:
           name: yagna-offer-server
 
+      - name: Verify binary
+        run: |
+          chmod +x yagna-offer-server 
+          ./yagna-offer-server --version
+
       - name: Prepare python venv
         run: |
           (cd integration && ./prepare_python.sh)
