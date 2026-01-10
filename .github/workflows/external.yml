@@ -63,7 +63,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.provider_group }} * ${{ extra_delay_secs }} ))
+          sleep $(( ${{ matrix.provider_group }} * ${{ github.event.inputs.extra_delay_secs }} ))
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -139,7 +139,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.requestor_group }} * ${{ extra_delay_secs }} ))
+          sleep $(( ${{ matrix.requestor_group }} * ${{ github.event.inputs.extra_delay_secs }} ))
 
       - name: Checkout
         uses: actions/checkout@v4
