@@ -148,7 +148,7 @@ jobs:
   requestor:
     name: Requestor part
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: salad-prov
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
