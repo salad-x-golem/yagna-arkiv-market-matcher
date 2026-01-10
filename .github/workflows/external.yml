@@ -15,6 +15,10 @@ on:
         description: "Number of parallel workers"
         required: false
         default: "5"
+      extra_delay_secs:
+        description: "Delay between consecutive workers starting"
+        required: false
+        default: "10"
 
 concurrency:
   group: external-tests
@@ -59,7 +63,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.provider_group }} * 10 ))
+          sleep $(( ${{ matrix.provider_group }} * ${{ extra_delay_secs }} ))
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,7 +139,7 @@ jobs:
     steps:
       - name: Wait
         run: |
-          sleep $(( ${{ matrix.requestor_group }} * 10 ))
+          sleep $(( ${{ matrix.requestor_group }} * ${{ extra_delay_secs }} ))
 
       - name: Checkout
         uses: actions/checkout@v4
