@@ -267,11 +267,6 @@ jobs:
             sleep 10
           done
 
-      - name: Show offers
-        if: always()
-        run: |
-          curl http://127.0.0.1:15155/offers/list | jq
-
       - name: Show demands
         if: always()
         run: |
