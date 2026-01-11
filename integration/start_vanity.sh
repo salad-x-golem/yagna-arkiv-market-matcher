@@ -2,4 +2,4 @@
 set -x
 
 # Start router
-(cd req-deployer/services/lower-0/vanity && ./start_bun.sh | tee ../../vanity.log)
+(cd req-deployer/services/lower-0/vanity && ./start_bun.sh | tee ../../../../vanity.log)
