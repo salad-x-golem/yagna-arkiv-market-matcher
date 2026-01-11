@@ -131,5 +131,10 @@ pub async fn take_offer_from_queue(data: web::Data<AppState>, body: String) -> H
             None => break,
         }
     }
+    log::info!(
+        "Taken {} offers from queue for demand {}",
+        resp.len(),
+        demand_obj.demand.id
+    );
     HttpResponse::Ok().json(resp)
 }
