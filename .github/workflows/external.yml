@@ -245,6 +245,7 @@ jobs:
           for i in $(seq 1 20); do
             (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }})
             sleep 10
+          done
           
           MAX_ATTEMPTS=10
           COUNT=0
