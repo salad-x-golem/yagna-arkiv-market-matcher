@@ -45,7 +45,7 @@ jobs:
         run: |
           (cd integration && ./setup_provider.sh "${{ matrix.size }}")
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
 
       - name: Setup router
         run: |
@@ -55,7 +55,7 @@ jobs:
         run: |
           (cd integration && ./setup_requestor.sh "${{ matrix.size }}")
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
 
       - name: Start services
         run: |

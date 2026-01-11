@@ -107,7 +107,7 @@ jobs:
         run: |
           (cd integration && ./setup_provider.sh ${{ github.event.inputs.nodes }})
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
           CENTRAL_NET_HOST: "${{ github.event.inputs.central_net_host }}"
           OFFER_SERVER: "http://polygongas.org:11500"
           MACHINE_PROV: "gth${{ matrix.provider_group }}"
@@ -202,7 +202,7 @@ jobs:
         run: |
           (cd integration && ./setup_requestor.sh)
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
           CENTRAL_NET_HOSTS: "${{ github.event.inputs.central_net_host }}"
 
       - name: Start matcher
