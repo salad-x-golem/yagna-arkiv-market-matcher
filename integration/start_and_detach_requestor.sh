@@ -2,10 +2,6 @@
 
 set -x
 
-./start_matcher.sh &
-
-sleep 2
-
 # Start yagna nodes
 ./start_requestor.sh &
 

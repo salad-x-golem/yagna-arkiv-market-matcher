@@ -205,6 +205,15 @@ jobs:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.14"
           CENTRAL_NET_HOSTS: "${{ github.event.inputs.central_net_host }}"
 
+      - name: Start matcher
+        run: |
+          ./yagna-offer-server &
+        env:
+          PICK_OFFERS_INTERVAL_SECS: "0.1"
+          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
+          OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+
       - name: Start services
         run: |
           (cd integration && ./start_and_detach_requestor.sh)
