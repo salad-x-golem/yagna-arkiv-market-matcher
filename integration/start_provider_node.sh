@@ -17,4 +17,5 @@ MACHINE_PROV=${MACHINE_PROV:-"geode"}
 
 for i in $(seq 0 "$end"); do
   (cd "node-deployer/services/${MACHINE_PROV}-$i/yagna" && ./yagna-"${MACHINE_PROV}"-"$i" service run >/dev/null 2>&1) &
+  sleep 0.1
 done

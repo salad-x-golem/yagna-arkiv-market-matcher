@@ -5,7 +5,7 @@ set -x
 # Start yagna nodes
 ./start_requestor.sh &
 
-sleep 10
+sleep 15
 
 # Start vanity service
 ./start_vanity.sh &
