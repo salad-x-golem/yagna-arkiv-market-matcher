@@ -135,11 +135,11 @@ jobs:
       - name: Logging
         if: always()
         run: |
-          (cd integration && ./collect_logs.sh ${{ github.event.inputs.nodes }})
+          (cd integration && ./collect_provider_logs.sh ${{ github.event.inputs.nodes }})
         env:
           MACHINE_PROV: "gth${{ matrix.provider_group }}"
 
-      - name: Upload logs
+      - name: Collect logs
         if: always()
         uses: actions/upload-artifact@v5
         with:
@@ -288,10 +288,10 @@ jobs:
         run: |
           (cd integration && ./kill_all.sh ${{ github.event.inputs.nodes }})
 
-      - name: Logging
+      - name: Collect logs
         if: always()
         run: |
-          (cd integration && ./collect_logs.sh ${{ github.event.inputs.nodes }})
+          (cd integration && ./collect_requestor_logs.sh  ${{ github.event.inputs.nodes }})
 
       - name: Upload logs
         if: always()
