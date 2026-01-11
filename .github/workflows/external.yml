@@ -21,7 +21,7 @@ on:
         default: "10"
 
 concurrency:
-  group: external-tests
+  group: external-tests2
 
 jobs:
   set-matrix:
