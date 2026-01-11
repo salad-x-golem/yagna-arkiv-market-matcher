@@ -36,9 +36,10 @@ jobs:
       - name: Build
         run: cargo build -p yagna-offer-server
 
-      - name: Prepare python venv
+      - name: Force install python libraries
         run: |
-          (cd integration && ./prepare_python.sh)
+          # Don't do this at home
+          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
 
       - name: Setup providers
         run: |
