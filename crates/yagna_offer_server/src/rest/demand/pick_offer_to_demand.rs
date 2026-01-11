@@ -101,7 +101,7 @@ pub async fn pick_offer_to_demand(data: web::Data<AppState>, body: String) -> Ht
 pub async fn local_pick_offer_to_demand(
     data: web::Data<AppState>,
     pick_offer_to_demand: PickOfferToDemand,
-    central_net_filter: Option<String>,
+    central_net_filter: Option<&String>,
 ) -> anyhow::Result<bool> {
     let perf_start = Instant::now();
     {
