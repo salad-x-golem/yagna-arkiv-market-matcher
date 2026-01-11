@@ -23,3 +23,4 @@ for i in $(seq 0 "$end"); do
 done
 
 pkill -9 router-geode || true
+pkill -9 yagna-offer-server || true
