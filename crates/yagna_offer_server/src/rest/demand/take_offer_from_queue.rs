@@ -99,7 +99,7 @@ pub async fn take_offer_from_queue(data: web::Data<AppState>, body: String) -> H
         }
     };
     let mut resp = Vec::new();
-    let limit_size = take_offer.limit_size.unwrap_or(50);
+    let limit_size = take_offer.take_at_once.unwrap_or(50);
     loop {
         if resp.len() >= limit_size {
             break;
