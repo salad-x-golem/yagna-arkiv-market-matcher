@@ -288,7 +288,7 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+          OFFER_GROUP: ".*"
 
       - name: Start services
         run: |
@@ -297,7 +297,6 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
 
       - name: Wait for providers to be online
         run: |
@@ -306,7 +305,7 @@ jobs:
           until (cd integration && python count_offers.py \
             --url "$OFFER_SOURCE_URL" \
             --expected-count ${{ github.event.inputs.nodes }} \
-            --name-filter "^$OFFER_GROUP-"); do
+            --name-filter "$OFFER_GROUP"); do
             printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
           done
@@ -314,7 +313,7 @@ jobs:
           echo "Providers are online"
         env:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+          OFFER_GROUP: ".*"
 
       - name: Check rentals
         run: |

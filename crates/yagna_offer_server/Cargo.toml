@@ -23,4 +23,5 @@ sha3 = { workspace = true }
 reqwest = { workspace = true }
 dotenv = { workspace = true }
 anyhow = { workspace = true }
+regex = "1.10.5"
 

@@ -163,12 +163,22 @@ pub async fn local_pick_offer_to_demand(
             let group = env::var("OFFER_GROUP").ok();
 
             if let Some(group) = group.as_ref() {
-                if !offer
-                    .attributes
-                    .node_name
-                    .contains((group.to_string() + "-").as_str())
-                {
-                    continue;
+                // treat OFFER_GROUP as a regex pattern; if invalid, fall back to previous contains logic
+                match regex::Regex::new(group.as_str()) {
+                    Ok(re) => {
+                        if !re.is_match(&offer.attributes.node_name) {
+                            continue;
+                        }
+                    }
+                    Err(_) => {
+                        if !offer
+                            .attributes
+                            .node_name
+                            .contains((group.to_string() + "-").as_str())
+                        {
+                            continue;
+                        }
+                    }
                 }
             } else if let Some(central_net_filter) = central_net_filter.as_ref() {
                 if !central_net_filter.contains("127.0.0.1")
