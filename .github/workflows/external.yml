@@ -298,7 +298,6 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          RUST_LOG: "debug"
 
       - name: Wait for providers to be online
         run: |
