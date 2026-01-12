@@ -302,10 +302,10 @@ jobs:
         run: |
           set -e
           
-          let EXPECTED_COUNT=${{ github.event.inputs.nodes }} * 2
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           until (cd integration && python count_offers.py \
             --url "$OFFER_SOURCE_URL" \
-            --expected-count $EXPECTED_COUNT \
+            --expected-count $(($EXPECTED_COUNT * 2)) \
             --name-filter "$OFFER_GROUP"); do
             printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
