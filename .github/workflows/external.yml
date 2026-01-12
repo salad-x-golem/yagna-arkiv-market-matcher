@@ -320,7 +320,7 @@ jobs:
         run: |
           let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           for i in $(seq 1 20); do
-            (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) || true
+            (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) || true)
             sleep 10
           done
           
