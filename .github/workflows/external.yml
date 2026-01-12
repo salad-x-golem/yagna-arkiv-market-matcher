@@ -300,8 +300,7 @@ jobs:
 
       - name: Wait for providers to be online
         run: |
-          set -e
-          
+          set -x
           let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           until (cd integration && python count_offers.py \
             --url "$OFFER_SOURCE_URL" \
