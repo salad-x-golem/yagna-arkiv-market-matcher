@@ -318,8 +318,9 @@ jobs:
 
       - name: Check rentals
         run: |
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           for i in $(seq 1 20); do
-            (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}) || true
+            (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) || true
             sleep 10
           done
           
