@@ -324,8 +324,10 @@ jobs:
           
           MAX_ATTEMPTS=10
           COUNT=0
-      
-          until (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}); do
+          
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
+          
+          until (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) ); do
             COUNT=$((COUNT + 1))
             if [ "$COUNT" -ge "$MAX_ATTEMPTS" ]; then
               echo "Providers not ready after $((MAX_ATTEMPTS * 10)) seconds, exiting."
