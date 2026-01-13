@@ -203,7 +203,7 @@ jobs:
 
       - name: Setup requestor
         run: |
-          CENTRAL_NET_HOSTS=polygongas.org:26400
+          export CENTRAL_NET_HOSTS=polygongas.org:$((26400 + ${{ matrix.requestor_group }}))
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
