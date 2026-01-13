@@ -36,7 +36,10 @@ jobs:
       - name: Kill routers
         if: always()
         run: |
-          pkill -f ya-sb-router || true
+          for port in 0, 1, 2, 3, 4; do
+            port=$((11500 + port))
+            pkill -9 rtr-${port}
+          done
 
       - name: Pack routers logs
         if: always()
