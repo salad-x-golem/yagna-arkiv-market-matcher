@@ -22,14 +22,14 @@ jobs:
         run: |
           mkdir ./routers
           for port in 0 1 2 3 4; do
-            port=$((11500 + port))
+            port=$((26400 + port))
             cp ./ya-sb-router ./routers/rtr-${port}
           done
 
       - name: Start routers
         run: |
           for port in 0 1 2 3 4; do
-            port=$((11500 + port))
+            port=$((26400 + port))
             ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
           done
 
@@ -37,7 +37,7 @@ jobs:
         if: always()
         run: |
           for port in 0 1 2 3 4; do
-            port=$((11500 + port))
+            port=$((26400 + port))
             pkill -9 rtr-${port}
           done
 
@@ -50,8 +50,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: routers-logs
-          path: 'routers-logs.tar.gz'
+          name: router-logs
+          path: 'router-logs.tar.gz'
 
   integration:
     name: Integration internal test
