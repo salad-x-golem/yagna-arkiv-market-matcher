@@ -44,8 +44,7 @@ jobs:
       - name: Pack routers logs
         if: always()
         run: |
-          sleep 5
-          tar -czvf routers-logs.tar.gz ./*.log
+          tar -czvf router-logs.tar.gz *.log
 
       - name: Upload routers logs
         if: always()
