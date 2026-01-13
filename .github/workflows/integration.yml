@@ -7,7 +7,7 @@ on:
 jobs:
   router:
     name: Setup central net routers
-    runs-on: geode
+    runs-on: geode-router
     steps:
       - name: Download and setup ya-sb-router
         run: |
