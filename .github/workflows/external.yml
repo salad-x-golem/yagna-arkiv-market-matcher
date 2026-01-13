@@ -48,7 +48,6 @@ jobs:
   build-binary:
     name: Build binary
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,6 +67,7 @@ jobs:
   router:
     name: Setup central net routers
     runs-on: geode-router
+    needs: [set-matrix]
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +95,13 @@ jobs:
           for port in $(seq 0 $((NUM_ROUTERS - 1))); do
             port=$((26400 + port))
             ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
+          done
+
+      - name: Wait for other tests to finish
+        run: |
+          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
+            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
+            sleep 10
           done
 
       - name: Kill routers
