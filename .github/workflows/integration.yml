@@ -5,56 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  router:
-    name: Setup central net routers
-    runs-on: geode-router
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download and setup ya-sb-router
-        run: |
-          wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
-          tar -xvf ya-sb-router-linux-v0.6.3.tar.gz
-          mv ya-sb-router-linux-v0.6.3/ya-sb-router .
-          rm -rf ya-sb-router-linux-v0.6.3
-          rm ya-sb-router-linux-v0.6.3.tar.gz
-          ./ya-sb-router --version
-
-      - name: Prepare array of executables
-        run: |
-          mkdir ./routers
-          for port in 0 1 2 3 4; do
-            port=$((2400 + port))
-            cp ./ya-sb-router ./routers/rtr-${port}
-          done
-
-      - name: Start routers
-        run: |
-          for port in 0 1 2 3 4; do
-            port=$((2400 + port))
-            ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
-          done
-
-      - name: Kill routers
-        if: always()
-        run: |
-          for port in 0 1 2 3 4; do
-            port=$((2400 + port))
-            pkill -9 rtr-${port}
-          done
-
-      - name: Pack routers logs
-        if: always()
-        run: |
-          tar -czvf router-logs.tar.gz *.log
-
-      - name: Upload routers logs
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: router-logs
-          path: 'router-logs.tar.gz'
-
   integration:
     name: Integration internal test
     timeout-minutes: 10
