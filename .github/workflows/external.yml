@@ -72,7 +72,7 @@ jobs:
   provider:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: salad-prov
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
@@ -149,7 +149,7 @@ jobs:
   provider2:
     name: Provider part - ${{ github.event.inputs.nodes }} nodes
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: salad-prov
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
@@ -226,7 +226,7 @@ jobs:
   requestor:
     name: Requestor part
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: salad-prov
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
