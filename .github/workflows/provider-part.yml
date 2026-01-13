@@ -9,9 +9,6 @@ on:
       provider_prefix:
         required: true
         type: string
-      central_net_host:
-        required: true
-        type: string
       extra_delay_secs:
         required: true
         type: string
@@ -59,10 +56,10 @@ jobs:
 
       - name: Setup providers
         run: |
+          CENTRAL_NET_HOST=polygongas.org:26400
           (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOST: "${{ inputs.central_net_host }}"
           OFFER_SERVER: "http://polygongas.org:11500"
           MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
 

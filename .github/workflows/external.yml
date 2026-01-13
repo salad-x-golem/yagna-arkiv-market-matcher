@@ -7,10 +7,6 @@ on:
         description: "Number of provider nodes"
         required: true
         default: "10"
-      central_net_host:
-        description: "Central net host"
-        required: false
-        default: "polygongas.org:6999"
       num_workers:
         description: "Number of parallel workers"
         required: false
@@ -69,13 +65,65 @@ jobs:
           name: yagna-offer-server
           path: target/release/yagna-offer-server
 
+  router:
+    name: Setup central net routers
+    runs-on: geode-router
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and setup ya-sb-router
+        run: |
+          wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
+          tar -xvf ya-sb-router-linux-v0.6.3.tar.gz
+          mv ya-sb-router-linux-v0.6.3/ya-sb-router .
+          rm -rf ya-sb-router-linux-v0.6.3
+          rm ya-sb-router-linux-v0.6.3.tar.gz
+          ./ya-sb-router --version
+
+      - name: Prepare array of executables
+        run: |
+          mkdir ./routers
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((26400 + port))
+            cp ./ya-sb-router ./routers/rtr-${port}
+          done
+
+      - name: Start routers
+        run: |
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((26400 + port))
+            ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
+          done
+
+      - name: Kill routers
+        if: always()
+        run: |
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((26400 + port))
+            pkill -9 rtr-${port}
+          done
+
+      - name: Pack routers logs
+        if: always()
+        run: |
+          tar -czvf router-logs.tar.gz *.log
+
+      - name: Upload routers logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: router-logs
+          path: 'router-logs.tar.gz'
+
   provider-gth:
     needs: [set-matrix, build-binary]
     uses: ./.github/workflows/provider-part.yml
     with:
       nodes: ${{ github.event.inputs.nodes }}
       provider_prefix: gth
-      central_net_host: ${{ github.event.inputs.central_net_host }}
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
@@ -88,7 +136,6 @@ jobs:
     with:
       nodes: ${{ github.event.inputs.nodes }}
       provider_prefix: gtg
-      central_net_host: ${{ github.event.inputs.central_net_host }}
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
@@ -149,10 +196,10 @@ jobs:
 
       - name: Setup requestor
         run: |
+          CENTRAL_NET_HOSTS=polygongas.org:26400
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOSTS: "${{ github.event.inputs.central_net_host }}"
 
       - name: Start matcher
         run: |
