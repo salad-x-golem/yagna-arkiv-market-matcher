@@ -69,159 +69,25 @@ jobs:
           name: yagna-offer-server
           path: target/release/yagna-offer-server
 
-  provider:
-    name: Provider part - ${{ github.event.inputs.nodes }} nodes
-    timeout-minutes: 15
-    runs-on: salad-prov
+  provider-gth:
     needs: [set-matrix, build-binary]
-    strategy:
-      fail-fast: false
-      matrix:
-        provider_group: ${{fromJSON(needs.set-matrix.outputs.workers)}}
+    uses: ./.github/workflows/provider-part.yml
+    with:
+      nodes: ${{ github.event.inputs.nodes }}
+      provider_prefix: gth
+      central_net_host: ${{ github.event.inputs.central_net_host }}
+      extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
+      workers: ${{ needs.set-matrix.outputs.workers }}
 
-    steps:
-      - name: Wait
-        run: |
-          sleep $(( ${{ matrix.provider_group }} * ${{ github.event.inputs.extra_delay_secs }} ))
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Force install python libraries
-        run: |
-          # Don't do this at home
-          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
-
-      - name: Setup providers
-        run: |
-          (cd integration && ./setup_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOST: "${{ github.event.inputs.central_net_host }}"
-          OFFER_SERVER: "http://polygongas.org:11500"
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Start providers
-        run: |
-          (cd integration && ./start_and_detach_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Wait for requestors to finish
-        run: |
-          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
-            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
-            sleep 10
-          done
-
-      - name: Kill services
-        if: always()
-        run: |
-          (cd integration && ./kill_all.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Logging
-        if: always()
-        run: |
-          (cd integration && ./collect_provider_logs.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Collect logs
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: provider-logs-${{ matrix.provider_group }}-${{ github.event.inputs.nodes }}
-          path: 'integration/all-logs.tar.gz'
-
-  provider2:
-    name: Provider part - ${{ github.event.inputs.nodes }} nodes
-    timeout-minutes: 15
-    runs-on: salad-prov
+  provider-gtg:
     needs: [set-matrix, build-binary]
-    strategy:
-      fail-fast: false
-      matrix:
-        provider_group: ${{fromJSON(needs.set-matrix.outputs.workers)}}
-
-    steps:
-      - name: Wait
-        run: |
-          sleep $(( ${{ matrix.provider_group }} * ${{ github.event.inputs.extra_delay_secs }} ))
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Force install python libraries
-        run: |
-          # Don't do this at home
-          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
-
-      - name: Setup providers
-        run: |
-          (cd integration && ./setup_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOST: "${{ github.event.inputs.central_net_host }}"
-          OFFER_SERVER: "http://polygongas.org:11500"
-          MACHINE_PROV: "gtg${{ matrix.provider_group }}"
-
-      - name: Start providers
-        run: |
-          (cd integration && ./start_and_detach_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gtg${{ matrix.provider_group }}"
-
-      - name: Wait for requestors to finish
-        run: |
-          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
-            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
-            sleep 10
-          done
-
-      - name: Kill services
-        if: always()
-        run: |
-          (cd integration && ./kill_all.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gtg${{ matrix.provider_group }}"
-
-      - name: Logging
-        if: always()
-        run: |
-          (cd integration && ./collect_provider_logs.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gtg${{ matrix.provider_group }}"
-
-      - name: Collect logs
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: provider-logs2-${{ matrix.provider_group }}-${{ github.event.inputs.nodes }}
-          path: 'integration/all-logs.tar.gz'
+    uses: ./.github/workflows/provider-part.yml
+    with:
+      nodes: ${{ github.event.inputs.nodes }}
+      provider_prefix: gtg
+      central_net_host: ${{ github.event.inputs.central_net_host }}
+      extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
+      workers: ${{ needs.set-matrix.outputs.workers }}
 
   requestor:
     name: Requestor part
