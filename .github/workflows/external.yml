@@ -78,6 +78,8 @@ jobs:
       central_net_host: ${{ github.event.inputs.central_net_host }}
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
   provider-gtg:
     needs: [set-matrix, build-binary]
@@ -88,6 +90,8 @@ jobs:
       central_net_host: ${{ github.event.inputs.central_net_host }}
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
   requestor:
     name: Requestor part
