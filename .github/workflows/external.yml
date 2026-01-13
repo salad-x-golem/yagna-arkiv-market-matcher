@@ -289,7 +289,7 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          OFFER_GROUP: ".*"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}-|gtg${{ matrix.requestor_group }}-"
 
       - name: Start services
         run: |
@@ -314,7 +314,7 @@ jobs:
           echo "Providers are online"
         env:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
-          OFFER_GROUP: ".*"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}-|gtg${{ matrix.requestor_group }}-"
 
       - name: Check rentals
         run: |
