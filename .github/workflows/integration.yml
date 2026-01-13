@@ -5,6 +5,51 @@ on:
   workflow_dispatch:
 
 jobs:
+  router:
+    name: Setup central net routers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and setup ya-sb-router
+        run: |
+          wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
+          tar -xvf ya-sb-router-linux-v0.6.3.tar.gz
+          mv ya-sb-router-linux-v0.6.3/ya-sb-router .
+          rm -rf ya-sb-router-linux-v0.6.3
+          rm ya-sb-router-linux-v0.6.3.tar.gz
+          ./ya-sb-router --version
+
+      - name: Prepare array of executables
+        run: |
+          mkdir ./routers
+          for port in 11500 11501 11502 11503 11504; do
+            cp ./ya-sb-router ./routers/rtr-${port}
+          done
+
+      - name: Start routers
+        run: |
+          for port in 11500 11501 11502 11503 11504
+          do
+            ./routers/rtr-${port} -l 0.0.0.0:${port} rtr-${port}.log 2>&1 &
+          done
+
+      - name: Kill routers
+        if: always()
+        run: |
+          pkill -f ya-sb-router || true
+
+      - name: Pack routers logs
+        if: always()
+        run: |
+          sleep 5
+          tar -czvf routers-logs.tar.gz ./*.log
+
+      - name: Upload routers logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: routers-logs
+          path: 'routers-logs.tar.gz'
+
   integration:
     name: Integration internal test
     timeout-minutes: 10
