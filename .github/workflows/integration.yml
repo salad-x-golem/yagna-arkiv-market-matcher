@@ -24,14 +24,14 @@ jobs:
         run: |
           mkdir ./routers
           for port in 0 1 2 3 4; do
-            port=$((26400 + port))
+            port=$((2400 + port))
             cp ./ya-sb-router ./routers/rtr-${port}
           done
 
       - name: Start routers
         run: |
           for port in 0 1 2 3 4; do
-            port=$((26400 + port))
+            port=$((2400 + port))
             ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
           done
 
@@ -39,7 +39,7 @@ jobs:
         if: always()
         run: |
           for port in 0 1 2 3 4; do
-            port=$((26400 + port))
+            port=$((2400 + port))
             pkill -9 rtr-${port}
           done
 

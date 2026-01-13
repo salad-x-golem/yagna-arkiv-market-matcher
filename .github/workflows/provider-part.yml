@@ -56,7 +56,7 @@ jobs:
 
       - name: Setup providers
         run: |
-          export CENTRAL_NET_HOST=polygongas.org:$((26400 + ${{ matrix.provider_group }}))
+          export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
           (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"

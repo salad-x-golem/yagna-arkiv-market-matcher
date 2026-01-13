@@ -85,7 +85,7 @@ jobs:
           mkdir ./routers
           NUM_ROUTERS=${{ github.event.inputs.num_workers }}
           for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((26400 + port))
+            port=$((2400 + port))
             cp ./ya-sb-router ./routers/rtr-${port}
           done
 
@@ -93,7 +93,7 @@ jobs:
         run: |
           NUM_ROUTERS=${{ github.event.inputs.num_workers }}
           for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((26400 + port))
+            port=$((2400 + port))
             ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
           done
 
@@ -109,7 +109,7 @@ jobs:
         run: |
           NUM_ROUTERS=${{ github.event.inputs.num_workers }}
           for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((26400 + port))
+            port=$((2400 + port))
             pkill -9 rtr-${port}
           done
 
@@ -203,7 +203,7 @@ jobs:
 
       - name: Setup requestor
         run: |
-          export CENTRAL_NET_HOSTS=polygongas.org:$((26400 + ${{ matrix.requestor_group }}))
+          export CENTRAL_NET_HOSTS=polygongas.org:$((2400 + ${{ matrix.requestor_group }}))
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
