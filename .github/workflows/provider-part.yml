@@ -22,6 +22,9 @@ on:
         required: false
         type: string
         default: ubuntu-latest
+    secrets:
+      DEPLOY_KEY:
+        required: true
 
 jobs:
   provider:
