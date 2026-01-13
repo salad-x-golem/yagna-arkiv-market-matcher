@@ -18,11 +18,15 @@ on:
       workers:
         required: true
         type: string
+      runs-on:
+        required: false
+        type: string
+        default: ubuntu-latest
 
 jobs:
   provider:
     timeout-minutes: 15
-    runs-on: salad-prov
+    runs-on: ${{ inputs.runs-on }}
     strategy:
       fail-fast: false
       matrix:
