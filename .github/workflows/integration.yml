@@ -21,15 +21,17 @@ jobs:
       - name: Prepare array of executables
         run: |
           mkdir ./routers
-          for port in 11500 11501 11502 11503 11504; do
+          for port in [0, 1, 2, 3, 4]; do
+            port=$((11500 + port))
             cp ./ya-sb-router ./routers/rtr-${port}
           done
 
       - name: Start routers
         run: |
-          for port in 11500 11501 11502 11503 11504
+          for port in [0, 1, 2, 3, 4]
           do
-            ./routers/rtr-${port} -l 0.0.0.0:${port} > rtr-${port}.log 2>&1 &
+            port=$((11500 + port))
+            ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
           done
 
       - name: Kill routers
