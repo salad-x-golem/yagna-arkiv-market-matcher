@@ -9,6 +9,8 @@ jobs:
     name: Setup central net routers
     runs-on: geode-router
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download and setup ya-sb-router
         run: |
           wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
