@@ -1,0 +1,98 @@
+name: Provider part
+
+on:
+  workflow_call:
+    inputs:
+      nodes:
+        required: true
+        type: string
+      provider_prefix:
+        required: true
+        type: string
+      extra_delay_secs:
+        required: true
+        type: string
+      workers:
+        required: true
+        type: string
+      runs-on:
+        required: false
+        type: string
+        default: ubuntu-latest
+    secrets:
+      DEPLOY_KEY:
+        required: true
+
+jobs:
+  provider:
+    timeout-minutes: 15
+    runs-on: ${{ inputs.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        provider_group: ${{ fromJSON(inputs.workers) }}
+
+    steps:
+      - name: Wait
+        run: |
+          sleep $(( ${{ matrix.provider_group }} * ${{ inputs.extra_delay_secs }} ))
+
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Force install python libraries
+        run: |
+          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
+
+      - name: Setup providers
+        run: |
+          export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
+          (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
+        env:
+          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
+          CENTRAL_NET_HOST: "${{ inputs.central_net_host }}"
+          OFFER_SERVER: "http://polygongas.org:11500"
+          MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
+
+      - name: Start providers
+        run: |
+          (cd integration && ./start_and_detach_provider.sh ${{ inputs.nodes }})
+        env:
+          MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
+
+      - name: Wait for requestors to finish
+        run: |
+          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
+            sleep 10
+          done
+
+      - name: Kill services
+        if: always()
+        run: |
+          (cd integration && ./kill_all.sh ${{ inputs.nodes }})
+        env:
+          MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
+
+      - name: Collect logs
+        if: always()
+        run: |
+          (cd integration && ./collect_provider_logs.sh ${{ inputs.nodes }})
+        env:
+          MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: provider-logs-${{ inputs.provider_prefix }}-${{ matrix.provider_group }}-${{ inputs.nodes }}
+          path: integration/all-logs.tar.gz

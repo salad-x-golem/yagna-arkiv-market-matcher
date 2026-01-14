@@ -7,10 +7,6 @@ on:
         description: "Number of provider nodes"
         required: true
         default: "10"
-      central_net_host:
-        description: "Central net host"
-        required: false
-        default: "polygongas.org:6999"
       num_workers:
         description: "Number of parallel workers"
         required: false
@@ -52,7 +48,6 @@ jobs:
   build-binary:
     name: Build binary
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,87 +64,95 @@ jobs:
           name: yagna-offer-server
           path: target/release/yagna-offer-server
 
-  provider:
-    name: Provider part - ${{ github.event.inputs.nodes }} nodes
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    needs: [set-matrix, build-binary]
-    strategy:
-      fail-fast: false
-      matrix:
-        provider_group: ${{fromJSON(needs.set-matrix.outputs.workers)}}
-
+  router:
+    name: Setup central net routers
+    runs-on: geode-router
+    needs: [set-matrix]
     steps:
-      - name: Wait
+      - uses: actions/checkout@v4
+
+      - name: Download and setup ya-sb-router
         run: |
-          sleep $(( ${{ matrix.provider_group }} * ${{ github.event.inputs.extra_delay_secs }} ))
+          wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
+          tar -xvf ya-sb-router-linux-v0.6.3.tar.gz
+          mv ya-sb-router-linux-v0.6.3/ya-sb-router .
+          rm -rf ya-sb-router-linux-v0.6.3
+          rm ya-sb-router-linux-v0.6.3.tar.gz
+          ./ya-sb-router --version
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup SSH
+      - name: Prepare array of executables
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          mkdir ./routers
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((2400 + port))
+            cp ./ya-sb-router ./routers/rtr-${port}
+          done
 
-      - name: Force install python libraries
+      - name: Start routers
         run: |
-          # Don't do this at home
-          sudo pip install --ignore-installed requests eth-account dotenv --break-system-packages
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((2400 + port))
+            ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
+          done
 
-      - name: Setup providers
-        run: |
-          (cd integration && ./setup_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOST: "${{ github.event.inputs.central_net_host }}"
-          OFFER_SERVER: "http://polygongas.org:11500"
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Start providers
-        run: |
-          (cd integration && ./start_and_detach_provider.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
-
-      - name: Wait for requestors to finish
+      - name: Wait for other tests to finish
         run: |
           until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
             printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
             sleep 10
           done
 
-      - name: Kill services
+      - name: Kill routers
         if: always()
         run: |
-          (cd integration && ./kill_all.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
+          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
+          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
+            port=$((2400 + port))
+            pkill -9 rtr-${port}
+          done
 
-      - name: Logging
+      - name: Pack routers logs
         if: always()
         run: |
-          (cd integration && ./collect_provider_logs.sh ${{ github.event.inputs.nodes }})
-        env:
-          MACHINE_PROV: "gth${{ matrix.provider_group }}"
+          tar -czvf router-logs.tar.gz *.log
 
-      - name: Collect logs
+      - name: Upload routers logs
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: provider-logs-${{ matrix.provider_group }}-${{ github.event.inputs.nodes }}
-          path: 'integration/all-logs.tar.gz'
+          name: router-logs
+          path: 'router-logs.tar.gz'
+
+  provider-gth:
+    needs: [set-matrix, build-binary]
+    uses: ./.github/workflows/provider-part.yml
+    with:
+      nodes: ${{ github.event.inputs.nodes }}
+      provider_prefix: gth
+      extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
+      workers: ${{ needs.set-matrix.outputs.workers }}
+      runs-on: salad-prov
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+
+  provider-gtg:
+    needs: [set-matrix, build-binary]
+    uses: ./.github/workflows/provider-part.yml
+    with:
+      nodes: ${{ github.event.inputs.nodes }}
+      provider_prefix: gtg
+      extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
+      workers: ${{ needs.set-matrix.outputs.workers }}
+      runs-on: salad-prov
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
   requestor:
     name: Requestor part
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: 'ubuntu-latest'
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
@@ -200,10 +203,10 @@ jobs:
 
       - name: Setup requestor
         run: |
+          export CENTRAL_NET_HOSTS=polygongas.org:$((2400 + ${{ matrix.requestor_group }}))
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
-          CENTRAL_NET_HOSTS: "${{ github.event.inputs.central_net_host }}"
 
       - name: Start matcher
         run: |
@@ -212,7 +215,7 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}-|gtg${{ matrix.requestor_group }}-"
 
       - name: Start services
         run: |
@@ -221,16 +224,15 @@ jobs:
           PICK_OFFERS_INTERVAL_SECS: "0.1"
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
           OFFER_MIRROR_SYNC_INTERVAL_SECS: "10"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
 
       - name: Wait for providers to be online
         run: |
-          set -e
-          
+          set -x
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           until (cd integration && python count_offers.py \
             --url "$OFFER_SOURCE_URL" \
-            --expected-count ${{ github.event.inputs.nodes }} \
-            --name-filter "^$OFFER_GROUP-"); do
+            --expected-count $(($EXPECTED_COUNT * 2)) \
+            --name-filter "$OFFER_GROUP"); do
             printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
           done
@@ -238,19 +240,22 @@ jobs:
           echo "Providers are online"
         env:
           OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
-          OFFER_GROUP: "gth${{ matrix.requestor_group }}"
+          OFFER_GROUP: "gth${{ matrix.requestor_group }}-|gtg${{ matrix.requestor_group }}-"
 
       - name: Check rentals
         run: |
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           for i in $(seq 1 20); do
-            (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}) || true
+            (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) || true)
             sleep 10
           done
           
           MAX_ATTEMPTS=10
           COUNT=0
-      
-          until (cd integration && ./show_rentals.sh ${{ github.event.inputs.nodes }}); do
+          
+          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
+          
+          until (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) ); do
             COUNT=$((COUNT + 1))
             if [ "$COUNT" -ge "$MAX_ATTEMPTS" ]; then
               echo "Providers not ready after $((MAX_ATTEMPTS * 10)) seconds, exiting."
