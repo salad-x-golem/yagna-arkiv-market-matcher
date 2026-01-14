@@ -15,6 +15,10 @@ on:
         description: "Delay between consecutive workers starting"
         required: false
         default: "10"
+      timeout_minutes:
+        description: "Timeout for jobs"
+        required: false
+        default: "2"
 
 concurrency:
   group: external-tests
@@ -44,67 +48,7 @@ jobs:
           WORKERS=$(seq 0 $(($NUMBER_OF_GROUPS - 1)) | jq -R . | jq -s -c .)
           echo "Setting: workers=$WORKERS"
           echo "workers=$WORKERS" >> $GITHUB_OUTPUT
-
-  router:
-    name: Setup central net routers
-    runs-on: geode-router
-    needs: [set-matrix]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download and setup ya-sb-router
-        run: |
-          wget https://github.com/golemfactory/ya-service-bus/releases/download/v0.6.3/ya-sb-router-linux-v0.6.3.tar.gz
-          tar -xvf ya-sb-router-linux-v0.6.3.tar.gz
-          mv ya-sb-router-linux-v0.6.3/ya-sb-router .
-          rm -rf ya-sb-router-linux-v0.6.3
-          rm ya-sb-router-linux-v0.6.3.tar.gz
-          ./ya-sb-router --version
-
-      - name: Prepare array of executables
-        run: |
-          mkdir ./routers
-          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
-          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((2400 + port))
-            cp ./ya-sb-router ./routers/rtr-${port}
-          done
-
-      - name: Start routers
-        run: |
-          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
-          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((2400 + port))
-            ./routers/rtr-${port} -l tcp://0.0.0.0:${port} > rtr-${port}.log 2>&1 &
-          done
-
-      - name: Wait for other tests to finish
-        run: |
-          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
-            printf "\n-- Test not yet finished, retrying in 10 seconds...\n"
-            sleep 10
-          done
-
-      - name: Kill routers
-        if: always()
-        run: |
-          NUM_ROUTERS=${{ github.event.inputs.num_workers }}
-          for port in $(seq 0 $((NUM_ROUTERS - 1))); do
-            port=$((2400 + port))
-            pkill -9 rtr-${port}
-          done
-
-      - name: Pack routers logs
-        if: always()
-        run: |
-          tar -czvf router-logs.tar.gz *.log
-
-      - name: Upload routers logs
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: router-logs
-          path: 'router-logs.tar.gz'
+          echo "timeout=${{ github.event.inputs.timeout_minutes }}" >> $GITHUB_OUTPUT
 
   provider-gth:
     needs: [set-matrix]
@@ -115,6 +59,7 @@ jobs:
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
+      timeout_minutes: ${{ needs.set-matrix.outputs.timeout }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
