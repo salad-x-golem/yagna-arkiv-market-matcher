@@ -82,7 +82,7 @@ jobs:
       - name: Wait for requestors to finish
         run: |
           OFFER_SERVER="${{ inputs.offer_server }}"
-          until (curl --fail-with-body "${OFFER_SERVER}/test/finished/check)"; do
+          until (curl --fail-with-body "${OFFER_SERVER}/test/finished/check"); do
             sleep 10
           done
 
