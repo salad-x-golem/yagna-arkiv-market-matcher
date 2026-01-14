@@ -1,4 +1,4 @@
-name: External tests
+name: Check providers only
 
 on:
   workflow_dispatch:
