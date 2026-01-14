@@ -34,7 +34,7 @@ on:
 
 jobs:
   provider:
-    timeout-minutes: 15
+    timeout-minutes: 5
     runs-on: ${{ inputs.runs-on }}
     strategy:
       fail-fast: false
