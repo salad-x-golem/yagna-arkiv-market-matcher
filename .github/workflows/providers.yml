@@ -17,8 +17,9 @@ on:
         default: "10"
       timeout_minutes:
         description: "Timeout for jobs"
+        type: number
         required: false
-        default: "2"
+        default: 2
 
 concurrency:
   group: external-tests
@@ -48,7 +49,6 @@ jobs:
           WORKERS=$(seq 0 $(($NUMBER_OF_GROUPS - 1)) | jq -R . | jq -s -c .)
           echo "Setting: workers=$WORKERS"
           echo "workers=$WORKERS" >> $GITHUB_OUTPUT
-          echo "timeout=${{ github.event.inputs.timeout_minutes }}" >> $GITHUB_OUTPUT
 
   provider-gth:
     needs: [set-matrix]
@@ -59,7 +59,7 @@ jobs:
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
-      timeout_minutes: ${{ needs.set-matrix.outputs.timeout }}
+      timeout_minutes: ${{ github.event.inputs.timeout_minutes }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
