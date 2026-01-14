@@ -27,6 +27,10 @@ on:
         required: false
         type: string
         default: "http://polygongas.org:11500"
+      timeout_minutes:
+        required: false
+        type: string
+        default: "5"
 
     secrets:
       DEPLOY_KEY:
@@ -34,7 +38,7 @@ on:
 
 jobs:
   provider:
-    timeout-minutes: 5
+    timeout-minutes: ${{ inputs.timeout_minutes }}
     runs-on: ${{ inputs.runs-on }}
     strategy:
       fail-fast: false
