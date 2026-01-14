@@ -77,7 +77,6 @@ jobs:
           else
             export CENTRAL_NET_HOST="${{ inputs.central_net_host }}"
           fi
-          export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
           echo "Using CENTRAL_NET_HOST=${CENTRAL_NET_HOST}"
           (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
         env:
