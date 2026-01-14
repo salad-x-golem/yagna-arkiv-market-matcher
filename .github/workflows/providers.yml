@@ -107,7 +107,7 @@ jobs:
           path: 'router-logs.tar.gz'
 
   provider-gth:
-    needs: [set-matrix, build-binary]
+    needs: [set-matrix]
     uses: ./.github/workflows/provider-part.yml
     with:
       nodes: ${{ github.event.inputs.nodes }}
