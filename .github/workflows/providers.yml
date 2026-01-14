@@ -17,9 +17,8 @@ on:
         default: "10"
       timeout_minutes:
         description: "Timeout for jobs"
-        type: number
-        required: false
-        default: 2
+        required: true
+        default: "2"
 
 concurrency:
   group: external-tests
@@ -33,7 +32,7 @@ jobs:
     steps:
       - name: Delete external offers (from previous runs)
         run: |
-          NUMBER_OF_GROUPS=${{ github.event.inputs.num_workers }}
+          NUMBER_OF_GROUPS=${{ inputs.num_workers }}
           # Create JSON file
           echo "{\"numberOfGroups\": ${NUMBER_OF_GROUPS}}" > body.json
           
@@ -44,7 +43,7 @@ jobs:
 
       - id: set-matrix
         run: |
-          NUMBER_OF_GROUPS=${{ github.event.inputs.num_workers }}
+          NUMBER_OF_GROUPS=${{ inputs.num_workers }}
           # Use seq to generate numbers, then jq to turn them into a JSON array
           WORKERS=$(seq 0 $(($NUMBER_OF_GROUPS - 1)) | jq -R . | jq -s -c .)
           echo "Setting: workers=$WORKERS"
@@ -56,10 +55,10 @@ jobs:
     with:
       nodes: ${{ github.event.inputs.nodes }}
       provider_prefix: gth
-      extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
+      extra_delay_secs: ${{ inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
-      timeout_minutes: ${{ github.event.inputs.timeout_minutes }}
+      timeout_minutes: ${{ fromJSON(inputs.timeout_minutes) }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
