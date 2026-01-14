@@ -86,10 +86,9 @@ jobs:
       - name: Wait for providers to be online
         run: |
           set -x
-          let EXPECTED_COUNT=${{ inputs.nodes }}
           until (cd integration && python count_offers.py \
-            --url "$OFFER_SOURCE_URL" \
-            --expected-count $(($EXPECTED_COUNT * 2)) \
+            --url "${OFFER_SERVER}/offers/list" \
+            --expected-count ${{ inputs.nodes }} \
             --name-filter "$MACHINE_PROV"); do
             printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
@@ -97,7 +96,7 @@ jobs:
           
           echo "Providers are online"
         env:
-          OFFER_SOURCE_URL: "http://polygongas.org:11500/offers/list"
+          OFFER_SERVER: "${{ inputs.offer_server }}"
           MACHINE_PROV: "${{inputs.provider_prefix}}${{ matrix.provider_group }}"
 
       - name: Wait for requestors to finish
