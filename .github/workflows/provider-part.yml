@@ -31,6 +31,9 @@ on:
         required: false
         type: number
         default: 5
+      central_net_host:
+        required: false
+        type: string
 
     secrets:
       DEPLOY_KEY:
@@ -69,11 +72,16 @@ jobs:
 
       - name: Setup providers
         run: |
+          if [ -z "${{ inputs.central_net_host }}" ]; then
+            export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
+          else
+            export CENTRAL_NET_HOST="${{ inputs.central_net_host }}"
+          fi
           export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
+          echo "Using CENTRAL_NET_HOST=${CENTRAL_NET_HOST}"
           (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
         env:
           YAGNA_VERSION: "${{ inputs.yagna_version }}"
-          CENTRAL_NET_HOST: "${{ inputs.central_net_host }}"
           OFFER_SERVER: "${{ inputs.offer_server }}"
           MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
 

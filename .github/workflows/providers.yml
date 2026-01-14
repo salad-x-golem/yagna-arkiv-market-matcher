@@ -59,6 +59,7 @@ jobs:
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
       timeout_minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+      central_net_host: "http://polygongas.org:11500"
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
