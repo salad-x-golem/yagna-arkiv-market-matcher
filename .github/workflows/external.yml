@@ -15,6 +15,10 @@ on:
         description: "Delay between consecutive workers starting"
         required: false
         default: "10"
+      yagna_version:
+        description: "Yagna version to use"
+        required: false
+        default: "pre-rel-v0.17.6-preview.noarkiv.15"
 
 concurrency:
   group: external-tests
@@ -134,6 +138,7 @@ jobs:
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
+      yagna_version: ${{ github.event.inputs.yagna_version }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
@@ -146,6 +151,7 @@ jobs:
       extra_delay_secs: ${{ github.event.inputs.extra_delay_secs }}
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
+      yagna_version: ${{ github.event.inputs.yagna_version }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
@@ -206,7 +212,7 @@ jobs:
           export CENTRAL_NET_HOSTS=polygongas.org:$((2400 + ${{ matrix.requestor_group }}))
           (cd integration && ./setup_requestor.sh)
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
+          YAGNA_VERSION: "${{ github.event.inputs.yagna_version }}"
 
       - name: Start matcher
         run: |

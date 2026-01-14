@@ -19,6 +19,15 @@ on:
         required: false
         type: string
         default: ubuntu-latest
+      yagna_version:
+        required: false
+        type: string
+        default: "pre-rel-v0.17.6-preview.noarkiv.15"
+      offer_server:
+        required: false
+        type: string
+        default: "http://polygongas.org:11500"
+
     secrets:
       DEPLOY_KEY:
         required: true
@@ -59,9 +68,9 @@ jobs:
           export CENTRAL_NET_HOST=polygongas.org:$((2400 + ${{ matrix.provider_group }}))
           (cd integration && ./setup_provider.sh ${{ inputs.nodes }})
         env:
-          YAGNA_VERSION: "pre-rel-v0.17.6-preview.noarkiv.15"
+          YAGNA_VERSION: "${{ inputs.yagna_version }}"
           CENTRAL_NET_HOST: "${{ inputs.central_net_host }}"
-          OFFER_SERVER: "http://polygongas.org:11500"
+          OFFER_SERVER: "${{ inputs.offer_server }}"
           MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
 
       - name: Start providers
@@ -72,7 +81,8 @@ jobs:
 
       - name: Wait for requestors to finish
         run: |
-          until (curl --fail-with-body http://polygongas.org:11500/test/finished/check); do
+          OFFER_SERVER="${{ inputs.offer_server }}"
+          until (curl --fail-with-body "${OFFER_SERVER}/test/finished/check)"; do
             sleep 10
           done
 
