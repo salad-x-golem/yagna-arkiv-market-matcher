@@ -19,6 +19,10 @@ on:
         description: "Timeout for jobs"
         required: true
         default: "2"
+      central_net_host:
+        description: "Central network host"
+        required: false
+        default: "polygongas.org:6999"
 
 concurrency:
   group: external-tests
@@ -59,7 +63,7 @@ jobs:
       workers: ${{ needs.set-matrix.outputs.workers }}
       runs-on: salad-prov
       timeout_minutes: ${{ fromJSON(inputs.timeout_minutes) }}
-      central_net_host: "http://polygongas.org:6999"
+      central_net_host: ${{ inputs.central_net_host }}
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
