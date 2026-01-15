@@ -93,10 +93,19 @@ jobs:
       - name: Wait for providers to be online
         run: |
           set -x
+          SECONDS=0
+          TIMEOUT=35
+          
           until (cd integration && python count_offers.py \
             --url "${OFFER_SERVER}/offers/list" \
             --expected-count ${{ inputs.nodes }} \
             --name-filter "$MACHINE_PROV"); do
+          
+            if [ "$SECONDS" -ge "$TIMEOUT" ]; then
+              echo "ERROR: Providers did not become ready within ${TIMEOUT} seconds"
+              exit 1
+            fi
+          
             printf "\nProviders not ready yet, retrying in 10 seconds...\n"
             sleep 10
           done
@@ -104,7 +113,7 @@ jobs:
           echo "Providers are online"
         env:
           OFFER_SERVER: "${{ inputs.offer_server }}"
-          MACHINE_PROV: "${{inputs.provider_prefix}}${{ matrix.provider_group }}"
+          MACHINE_PROV: "${{ inputs.provider_prefix }}${{ matrix.provider_group }}"
 
       - name: Wait for requestors to finish
         run: |
