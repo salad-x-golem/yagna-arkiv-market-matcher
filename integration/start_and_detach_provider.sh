@@ -13,9 +13,4 @@ fi
 set -x
 
 # Start yagna nodes
-./start_provider_node.sh "${NUMBER_OF_NODES}" &
-
-sleep 10
-
-# Start provider
 ./start_provider.sh "${NUMBER_OF_NODES}" &
