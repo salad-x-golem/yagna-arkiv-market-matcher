@@ -218,10 +218,13 @@ jobs:
 
       - name: Setup requestor
         run: |
+          MACHINE_ID=req-${{ matrix.requestor_group }}
+          export WORKER_TRACE_SERVER_URL="https://salad-proxy.seweryn.dev/cache/${MACHINE_ID}"
           export CENTRAL_NET_HOSTS=polygongas.org:$((2400 + ${{ matrix.requestor_group }}))
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "${{ github.event.inputs.yagna_version }}"
+          WORKER_TRACE_AUTH_TOKEN: ${{ secrets.WORKER_TRACE_AUTH_TOKEN }}
 
       - name: Start matcher
         run: |
