@@ -219,9 +219,10 @@ jobs:
       - name: Setup requestor
         run: |
           MACHINE_ID=req-${{ matrix.requestor_group }}
+          EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           export WORKER_TRACE_SERVER_URL="https://salad-proxy.seweryn.dev/cache/${MACHINE_ID}"
           export CENTRAL_NET_HOSTS=polygongas.org:$((2400 + ${{ matrix.requestor_group }}))
-          export MAX_POSSIBLE_WORKERS=${{ github.event.inputs.num_workers }}
+          export MAX_POSSIBLE_WORKERS=$((EXPECTED_COUNT * 2))
           (cd integration && ./setup_requestor.sh)
         env:
           YAGNA_VERSION: "${{ github.event.inputs.yagna_version }}"
@@ -247,7 +248,7 @@ jobs:
       - name: Wait for providers to be online
         run: |
           set -x
-          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
+          EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           until (cd integration && python count_offers.py \
             --url "$OFFER_SOURCE_URL" \
             --expected-count $(($EXPECTED_COUNT * 2)) \
@@ -263,7 +264,7 @@ jobs:
 
       - name: Check rentals
         run: |
-          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
+          EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           for i in $(seq 1 20); do
             (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) || true)
             sleep 10
@@ -272,7 +273,7 @@ jobs:
           MAX_ATTEMPTS=10
           COUNT=0
           
-          let EXPECTED_COUNT=${{ github.event.inputs.nodes }}
+          EXPECTED_COUNT=${{ github.event.inputs.nodes }}
           
           until (cd integration && ./show_rentals.sh $(($EXPECTED_COUNT * 2)) ); do
             COUNT=$((COUNT + 1))
