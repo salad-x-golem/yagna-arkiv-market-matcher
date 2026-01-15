@@ -35,7 +35,7 @@ echo "Timeout: ${TIMEOUT} seconds"
 
 while true; do
   # Check HTTP status code
-  status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${YAGNA_APPKEY}" "$ENDPOINT" || true)
+  status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${YAGNA_APPKEY}" "${ENDPOINT}"/me || true)
 
   if [[ "$status" == "200" ]]; then
     echo "yagna is ready (HTTP 200)"
