@@ -15,6 +15,11 @@ if [[ -z "${YAGNA_API_URL:-}" ]]; then
   echo "ERROR: YAGNA_API_URL not set in .env" >&2
   exit 1
 fi
+if [[ -z "${YAGNA_APPKEY:-}" ]]; then
+  echo "ERROR: YAGNA_APPKEY not set in .env" >&2
+  exit 1
+fi
+
 ENDPOINT="${YAGNA_API_URL}"
 
 TIMEOUT=60
@@ -25,10 +30,12 @@ INTERVAL=1
 start_time=$(date +%s)
 
 echo "Waiting for yagna to become ready..."
+echo "Endpoint: $ENDPOINT"
+echo "Timeout: ${TIMEOUT} seconds"
 
 while true; do
   # Check HTTP status code
-  status=$(curl -s -o /dev/null -w "%{http_code}" "$ENDPOINT" || true)
+  status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${YAGNA_APPKEY}" "$ENDPOINT" || true)
 
   if [[ "$status" == "200" ]]; then
     echo "yagna is ready (HTTP 200)"
