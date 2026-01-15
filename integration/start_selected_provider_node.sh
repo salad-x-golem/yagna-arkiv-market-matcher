@@ -39,7 +39,7 @@ while true; do
 
   if [[ "$status" == "200" ]]; then
     echo "yagna is ready (HTTP 200)"
-    exit 0
+    break
   fi
 
   current_time=$(date +%s)
