@@ -167,7 +167,7 @@ jobs:
   requestor:
     name: Requestor part
     timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
-    runs-on: 'ubuntu-latest'
+    runs-on: salad-prov
     needs: [set-matrix, build-binary]
     strategy:
       fail-fast: false
